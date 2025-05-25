@@ -1,0 +1,313 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザー管理
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String?
+  image           String?
+  password        String?
+  emailVerified   DateTime?
+  role            UserRole @default(PATIENT)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 認証関連
+  accounts        Account[]
+  sessions        Session[]
+  
+  // 患者として
+  appointments    Appointment[]
+  consultations   Consultation[]
+  reviews         Review[]
+  chatMessages    ChatMessage[]
+  notifications   Notification[]
+  userRewards     UserReward[]
+  
+  // 医師として
+  doctorProfile   Doctor?
+  
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// 医師情報
+model Doctor {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  licenseNumber     String   @unique
+  specialization    String[]
+  experience        Int
+  education         String
+  certifications    String[]
+  consultationFee   Decimal
+  bio               String?
+  languages         String[]
+  isVerified        Boolean  @default(false)
+  rating            Float    @default(0)
+  totalReviews      Int      @default(0)
+  availableSlots    Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospital          Hospital?      @relation(fields: [hospitalId], references: [id])
+  hospitalId        String?
+  appointments      Appointment[]
+  consultations     Consultation[]
+  reviews           Review[]
+  
+  @@map("doctors")
+}
+
+// 病院情報
+model Hospital {
+  id            String   @id @default(cuid())
+  name          String
+  address       String
+  phone         String
+  email         String?
+  website       String?
+  description   String?
+  facilities    String[]
+  departments   String[]
+  rating        Float    @default(0)
+  totalReviews  Int      @default(0)
+  coordinates   Json?
+  operatingHours Json?
+  emergencyServices Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  doctors       Doctor[]
+  appointments  Appointment[]
+  reviews       Review[]
+  
+  @@map("hospitals")
+}
+
+// 予約管理
+model Appointment {
+  id            String            @id @default(cuid())
+  patientId     String
+  doctorId      String
+  hospitalId    String?
+  scheduledAt   DateTime
+  duration      Int               @default(30) // minutes
+  type          AppointmentType
+  status        AppointmentStatus @default(SCHEDULED)
+  symptoms      String?
+  notes         String?
+  prescription  String?
+  diagnosis     String?
+  fee           Decimal?
+  paymentStatus PaymentStatus     @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  patient       User              @relation(fields: [patientId], references: [id])
+  doctor        Doctor            @relation(fields: [doctorId], references: [id])
+  hospital      Hospital?         @relation(fields: [hospitalId], references: [id])
+  consultation  Consultation?
+  
+  @@map("appointments")
+}
+
+// オンライン相談
+model Consultation {
+  id              String             @id @default(cuid())
+  appointmentId   String             @unique
+  patientId       String
+  doctorId        String
+  status          ConsultationStatus @default(WAITING)
+  startedAt       DateTime?
+  endedAt         DateTime?
+  roomId          String?
+  recording       String?
+  summary         String?
+  followUpNeeded  Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  appointment     Appointment       @relation(fields: [appointmentId], references: [id])
+  patient         User              @relation(fields: [patientId], references: [id])
+  doctor          Doctor            @relation(fields: [doctorId], references: [id])
+  chatMessages    ChatMessage[]
+  
+  @@map("consultations")
+}
+
+// チャットメッセージ
+model ChatMessage {
+  id             String       @id @default(cuid())
+  consultationId String
+  senderId       String
+  message        String
+  messageType    MessageType  @default(TEXT)
+  fileUrl        String?
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  consultation   Consultation @relation(fields: [consultationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+  
+  @@map("chat_messages")
+}
+
+// レビュー・評価
+model Review {
+  id         String     @id @default(cuid())
+  patientId  String
+  doctorId   String?
+  hospitalId String?
+  rating     Int        // 1-5
+  comment    String?
+  isVerified Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  patient    User       @relation(fields: [patientId], references: [id])
+  doctor     Doctor?    @relation(fields: [doctorId], references: [id])
+  hospital   Hospital?  @relation(fields: [hospitalId], references: [id])
+  
+  @@map("reviews")
+}
+
+// 通知システム
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id])
+  
+  @@map("notifications")
+}
+
+// ユーザー報酬システム
+model UserReward {
+  id          String     @id @default(cuid())
+  userId      String
+  type        RewardType
+  points      Int
+  description String
+  createdAt   DateTime   @default(now())
+
+  user        User       @relation(fields: [userId], references: [id])
+  
+  @@map("user_rewards")
+}
+
+// Enums
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum AppointmentType {
+  IN_PERSON
+  ONLINE
+  EMERGENCY
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ConsultationStatus {
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+}
+
+enum NotificationType {
+  APPOINTMENT_REMINDER
+  APPOINTMENT_CONFIRMED
+  CONSULTATION_STARTED
+  MESSAGE_RECEIVED
+  REVIEW_REQUEST
+  SYSTEM
+}
+
+enum RewardType {
+  REGISTRATION
+  FIRST_APPOINTMENT
+  REVIEW_POSTED
+  REFERRAL
+  LOYALTY
+}

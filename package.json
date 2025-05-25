@@ -1,0 +1,39 @@
+{
+  "name": "doctor-direct",
+  "version": "1.0.0",
+  "description": "Doctor Direct - 医療情報・オンライン相談プラットフォーム",
+  "private": true,
+  "workspaces": [
+    "doctor-direct-nextjs"
+  ],
+  "scripts": {
+    "setup": "./setup.sh",
+    "backend": "cd scripts && ./run_backend.sh",
+    "frontend": "cd doctor-direct-nextjs && npm run dev",
+    "frontend:build": "cd doctor-direct-nextjs && npm run build",
+    "frontend:start": "cd doctor-direct-nextjs && npm run start",
+    "frontend:lint": "cd doctor-direct-nextjs && npm run lint",
+    "install:frontend": "cd doctor-direct-nextjs && npm install",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "build": "npm run frontend:build",
+    "start": "concurrently \"npm run backend\" \"npm run frontend:start\"",
+    "health": "cd scripts && ./health-check.sh",
+    "test": "npm run frontend:lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "healthcare",
+    "consultation",
+    "nextjs",
+    "php",
+    "api"
+  ],
+  "author": "Doctor Direct Team",
+  "license": "MIT"
+}

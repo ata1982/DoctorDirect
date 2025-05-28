@@ -1,57 +1,40 @@
 # Doctor Direct プロジェクト
 
-このプロジェクトは、PHP製のバックエンドAPIとNext.js製のフロントエンドアプリケーションで構成されています。
+このプロジェクトは、Next.js製のフロントエンドアプリケーションとTailwind CSSで構成されたモダンな医療相談プラットフォームです。
 
-## ディレクトリ構成
+## 技術スタック
 
-- `backend/`: PHPバックエンド (API)
-- `doctor-direct-nextjs/`: Next.jsフロントエンドアプリケーション
-- `scripts/`: 起動スクリプトなど
-- `docs/`: ドキュメント
-- `.github/workflows/`: GitHub Actions自動デプロイ設定
+### フロントエンド
+- Next.js 15.x (App Router)
+- TypeScript
+- Tailwind CSS
+- React 19.x
+
+### インフラ・デプロイ
+- Vercel (ホスティング)
+- GitHub Actions (CI/CD)
 
 ## セットアップ
 
-プロジェクトのセットアップは、ルートディレクトリにある `setup.sh` を実行します。
+プロジェクトのセットアップ手順：
 
 ```bash
-./setup.sh
-```
+# 依存関係のインストール
+npm install
 
-このスクリプトにより以下が自動実行されます：
-- PHPバックエンドの依存関係インストール（Composer）
-- データベースのセットアップ（MySQL）
-- Next.jsフロントエンドの依存関係インストール（npm）
-- Prisma Clientの生成
-- プロジェクトルートの依存関係インストール
+# 開発サーバーの起動
+npm run dev
+```
 
 ## 起動方法
 
-### 🚀 統合起動（推奨）
-
-バックエンドとフロントエンドを同時に起動：
+### 🚀 開発環境
 
 ```bash
 npm run dev
 ```
 
-### 🔧 個別起動
-
-#### バックエンドAPI
-
-```bash
-npm run backend
-```
-
-バックエンドAPIは `http://localhost:8000/api/v1/` で利用可能になります。
-
-#### フロントエンド (Next.js)
-
-```bash
-npm run frontend
-```
-
-フロントエンドは `http://localhost:3000` で利用可能になります。
+開発サーバーは `http://localhost:3000` で利用可能になります。
 
 ### 📦 その他のコマンド
 
@@ -63,70 +46,70 @@ npm run build
 npm start
 
 # ESLintチェック
-npm run frontend:lint
-
-# Next.jsフロントエンドの依存関係更新
-npm run install:frontend
+npm run lint
 ```
 
-## 環境設定
+## Vercelデプロイ
 
-各アプリケーションの環境設定ファイルは以下を参考にしてください。
+このプロジェクトはVercelに最適化されており、GitHubリポジトリを接続するだけで自動デプロイが可能です。
 
-- **バックエンド**: `backend/app/core/config.php` (データベース接続情報など)
-    - `setup.sh` 実行時にサンプルが生成されます。
-- **フロントエンド (Next.js)**: `doctor-direct-nextjs/.env` または `doctor-direct-nextjs/.env.local`
-    - データベースURL (`DATABASE_URL`)、NextAuth関連 (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`) などの設定が必要です。
-    - Renderデプロイ時の環境変数については、[`docs/github-actions-render-deploy.md`](docs/github-actions-render-deploy.md) も参照してください。
+### デプロイ手順
 
-## GitHub Actions自動デプロイ
+1. [Vercel](https://vercel.com)にアカウント作成/ログイン
+2. GitHubリポジトリをインポート
+3. プロジェクト設定で以下を確認：
+   - Framework Preset: Next.js
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+4. デプロイボタンをクリック
 
-Next.jsアプリケーションのRenderプラットフォームへの自動デプロイ設定が `.github/workflows/deploy.yml` に含まれています。
+### 環境変数（必要に応じて）
 
-### 必要なGitHub Secrets
-
-以下のSecretsをGitHubリポジトリに設定してください：
+Vercelの環境変数設定で以下を追加できます：
 
 ```
-RENDER_DEPLOY_HOOK_URL  # RenderのDeploy Hook URL
-RENDER_SERVICE_ID       # RenderサービスID (srv-xxxxx)
-RENDER_API_KEY          # RenderのAPI Key
-DATABASE_URL            # PostgreSQLデータベースURL
-NEXTAUTH_SECRET         # NextAuth用シークレット
+NEXT_PUBLIC_API_URL     # APIのベースURL（将来的な拡張用）
 ```
-
-詳細な設定手順は [`docs/github-actions-render-deploy.md`](docs/github-actions-render-deploy.md) を参照してください。
 
 ## 開発フロー
 
 1. **ローカル開発**: `npm run dev` でローカル環境を起動
 2. **コード変更**: 各機能の開発・修正
-3. **テスト**: `npm run frontend:lint` でコード品質チェック
-4. **Git Push**: `git push origin main` で自動デプロイがトリガー
-5. **本番確認**: RenderでデプロイされたアプリケーションをURLで確認
+3. **テスト**: `npm run lint` でコード品質チェック
+4. **Git Push**: `git push origin main` でVercelに自動デプロイ
+5. **本番確認**: VercelでデプロイされたアプリケーションをURLで確認
 
-## プロジェクト技術スタック
+## プロジェクト構成
 
-### バックエンド
-- PHP 8.x
-- MySQL
-- Composer
-- JWT認証
+```
+├── app/                    # Next.js App Router
+│   ├── globals.css        # Tailwind CSS設定
+│   ├── layout.tsx         # ルートレイアウト
+│   └── page.tsx           # メインページ
+├── components/            # Reactコンポーネント
+│   ├── Header.tsx         # ヘッダーコンポーネント
+│   ├── Hero.tsx           # ヒーローセクション
+│   ├── Features.tsx       # 機能セクション
+│   ├── CTA.tsx            # CTAセクション
+│   └── Footer.tsx         # フッターコンポーネント
+├── public/                # 静的ファイル
+├── next.config.js         # Next.js設定
+├── tailwind.config.js     # Tailwind CSS設定
+└── tsconfig.json          # TypeScript設定
+```
 
-### フロントエンド
-- Next.js 15.x (App Router)
-- TypeScript
-- Tailwind CSS
-- Prisma (ORM)
-- NextAuth.js (認証)
-- Socket.io (リアルタイム通信)
+## 主な機能
 
-### インフラ・CI/CD
-- Render (ホスティング)
-- GitHub Actions (自動デプロイ)
-- PostgreSQL (本番DB)
+- **レスポンシブデザイン**: 全デバイス対応
+- **AI症状診断**: 症状入力による分析機能
+- **医師検索**: 専門医師の検索・予約
+- **病院検索**: 近隣病院の検索機能
+- **オンライン相談**: リアルタイム医療相談
+- **セキュリティ**: 医療情報の暗号化保護
 
-## その他ドキュメント
+## 今後の拡張予定
 
-- Next.jsアプリケーション詳細: [`doctor-direct-nextjs/README.md`](doctor-direct-nextjs/README.md)
-- Renderデプロイガイド: [`docs/github-actions-render-deploy.md`](docs/github-actions-render-deploy.md)
+- バックエンドAPI統合
+- 認証システム（NextAuth.js）
+- データベース連携（Prisma）
+- リアルタイム通信（Socket.io）

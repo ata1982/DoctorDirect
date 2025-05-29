@@ -8,56 +8,50 @@
 - [x] `next.config.js` - Next.js設定（Vercel対応）
 - [x] `package.json` - ビルドスクリプト設定済み
 - [x] **NextAuth.js認証機能** - Google/GitHub OAuth対応
+- [x] **環境変数設定** - Vercelデータ取得済み
 
 ### 必要な手順（初回のみ）
 
-#### 1. Vercel API情報取得
-- [ ] Vercel API Token取得 → https://vercel.com/account/tokens
-- [ ] Vercel Project ID取得（プロジェクト設定画面）
-- [ ] Vercel Org ID取得（チーム設定画面）
+#### ✅ 1. Vercel API情報取得済み
+- [x] Vercel API Token: `fps9igcLXnBXi6QjlAZLXReB`
+- [x] Vercel Project ID: `prj_udZpAmo6gFxhc9OLYEKUrIIoXSD6`
+- [x] Vercel Org ID: `team_x1yX5LGP9hQd14xqyuHkFZEj`
+- [x] 本番URL: `https://doctor-direct-delta.vercel.app/`
 
-#### 2. GitHub Secrets設定
-GitHub Repository → Settings → Secrets and variables → Actions で設定：
+#### 🚨 2. GitHub Secrets設定（要実行）
+GitHub Repository → Settings → Secrets and variables → Actions で以下を設定：
 
 ```
-# Vercel デプロイ用
-VERCEL_TOKEN = [取得したAPI Token]
-VERCEL_PROJECT_ID = [取得したProject ID]
-VERCEL_ORG_ID = [取得したOrg ID]
-
-# NextAuth.js認証用 (NEW!)
-NEXTAUTH_SECRET = tbeORFbiad6z+HIjK4M8n9u3VgysNbHcK4pCvTcy6X4=
-NEXTAUTH_URL = https://your-domain.vercel.app
-
-# OAuth プロバイダー設定 (オプション)
-GOOGLE_CLIENT_ID = [Google OAuth Client ID]
-GOOGLE_CLIENT_SECRET = [Google OAuth Client Secret]
-GITHUB_ID = [GitHub OAuth App ID]
-GITHUB_SECRET = [GitHub OAuth App Secret]
+VERCEL_TOKEN=fps9igcLXnBXi6QjlAZLXReB
+VERCEL_PROJECT_ID=prj_udZpAmo6gFxhc9OLYEKUrIIoXSD6
+VERCEL_ORG_ID=team_x1yX5LGP9hQd14xqyuHkFZEj
+NEXTAUTH_SECRET=tbeORFbiad6z+HIjK4M8n9u3VgysNbHcK4pCvTcy6X4=
+NEXTAUTH_URL=https://doctor-direct-delta.vercel.app/
 ```
 
-#### 3. Vercel Dashboard環境変数設定
-Vercel Dashboard → Settings → Environment Variables で同じ値を設定
+#### ✅ 3. Vercel Dashboard環境変数設定済み
+Vercel Dashboard → Settings → Environment Variables で設定済み：
+- `NODE_ENV=production`
+- `NEXTAUTH_URL=https://doctor-direct-delta.vercel.app/`
+- `NEXTAUTH_SECRET=tbeORFbiad6z+HIjK4M8n9u3VgysNbHcK4pCvTcy6X4=`
 
 #### 4. OAuth アプリ設定（認証を有効にする場合）
 
 **Google OAuth:**
 1. [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
 2. Create OAuth 2.0 Client ID
-3. Authorized redirect URIs: `https://your-domain.vercel.app/api/auth/callback/google`
+3. Authorized redirect URIs: `https://doctor-direct-delta.vercel.app/api/auth/callback/google`
 
 **GitHub OAuth:**
 1. GitHub → Settings → Developer settings → OAuth Apps
 2. New OAuth App
-3. Authorization callback URL: `https://your-domain.vercel.app/api/auth/callback/github`
+3. Authorization callback URL: `https://doctor-direct-delta.vercel.app/api/auth/callback/github`
 
-#### 5. 初回プッシュテスト
+#### 5. 次回プッシュで自動デプロイ完了
 ```bash
-# 現在の変更をコミット
+# 環境変数設定後にプッシュ
 git add .
-git commit -m "feat: NextAuth.js認証機能追加"
-
-# GitHubにプッシュ（自動デプロイ開始）
+git commit -m "feat: 本番環境変数設定完了"
 git push origin main
 ```
 
@@ -80,10 +74,23 @@ git push origin main
 
 1. **GitHub Actions**: Repository → Actions タブで実行状況確認
 2. **Vercel Dashboard**: Deployments で本番デプロイ確認
-3. **本番サイト**: デプロイ完了後のURLで動作確認
+3. **本番サイト**: `https://doctor-direct-delta.vercel.app/` で動作確認
 4. **認証テスト**: ヘッダーのログインボタンで認証機能確認
 
-## 🎯 新機能: NextAuth.js認証
+## 🎯 本番環境情報
+
+### 本番URL
+```
+https://doctor-direct-delta.vercel.app/
+```
+
+### 認証エンドポイント
+```
+https://doctor-direct-delta.vercel.app/api/auth/signin
+https://doctor-direct-delta.vercel.app/api/auth/signout
+```
+
+### 新機能: NextAuth.js認証
 
 ### 追加された機能
 - ✅ **Google OAuth** - Googleアカウントでログイン
@@ -116,12 +123,20 @@ npm run dev
 
 ### ❌ 認証エラーが発生した場合
 1. **環境変数確認**: `.env.local` と Vercel 環境変数が一致しているか
-2. **OAuth設定確認**: リダイレクトURLが正しく設定されているか
+2. **OAuth設定確認**: リダイレクトURLが `https://doctor-direct-delta.vercel.app/` に設定されているか
 3. **NEXTAUTH_SECRET**: 本番とローカルで同じ値を使用しているか
 
 ### ❌ GitHub Actions失敗
-1. **Secrets確認**: NextAuth.js関連の環境変数が設定されているか
+1. **Secrets確認**: GitHub Secretsが正しく設定されているか
 2. **ビルドログ確認**: 認証関連のコンパイルエラーがないか
+
+## ⚠️ 重要な次のステップ
+
+### 1. GitHub Secretsの設定
+上記の5つの環境変数をGitHub Repository → Settings → Secrets and variables → Actions で設定してください。
+
+### 2. OAuth設定（認証機能を有効にする場合）
+Google/GitHubでOAuthアプリを作成し、対応する環境変数をGitHub SecretsとVercelに追加してください。
 
 ## ✅ 自動デプロイのメリット（更新版）
 
@@ -132,5 +147,6 @@ npm run dev
 - ✅ **エラー検知**: ビルド失敗時に自動通知
 - ✅ **認証機能**: Google/GitHub OAuth完全対応
 - ✅ **セキュリティ**: JWT方式の安全なセッション管理
+- ✅ **本番環境**: https://doctor-direct-delta.vercel.app/ で稼働中
 
-これで VSCode → GitHub → Vercel の完全自動デプロイパイプライン + **認証機能付き** が完成しました！
+これで VSCode → GitHub → Vercel の完全自動デプロイパイプライン + **認証機能付き** + **本番環境設定完了** です！

@@ -7,7 +7,7 @@
 ### フロントエンド
 - Next.js 15.x (App Router)
 - TypeScript
-- Tailwind CSS
+- Tailwind CSS 4.x
 - React 19.x
 
 ### 認証・セキュリティ
@@ -102,113 +102,98 @@ GITHUB_SECRET=your-github-client-secret
 
 このプロジェクトは **VSCode → GitHub → Vercel** の完全自動デプロイパイプラインを構築済みです。
 
-### 前提条件
-- ✅ GitHub リポジトリ作成済み
-- ✅ Vercel アカウント作成済み
-- ✅ GitHub Actions ワークフロー設定済み (`.github/workflows/deploy.yml`)
+### ✅ 設定状況
 
-### STEP 1: Vercel API設定
+#### ファイル構成
+- [x] `.github/workflows/deploy.yml` - GitHub Actions ワークフロー
+- [x] `vercel.json` - Vercel設定ファイル（Next.js最適化済み）
+- [x] `next.config.js` - Next.js設定（Vercel対応）
+- [x] `package.json` - ビルドスクリプト設定済み
+- [x] **NextAuth.js認証機能** - Google/GitHub OAuth対応
+- [x] **環境変数設定** - Vercelデータ取得済み
 
-#### 1-1. Vercel API Token取得
-1. [Vercel Dashboard](https://vercel.com/account/tokens) にアクセス
-2. **「Create Token」** をクリック
-3. **Token Name**: `GitHub Actions Deploy`
-4. **Scope**: `Full Account`
-5. **「Create」** → **トークンをコピー** 📋
+#### ✅ Vercel API情報取得済み
+- [x] Vercel API Token: `fps9igcLXnBXi6QjlAZLXReB`
+- [x] Vercel Project ID: `prj_udZpAmo6gFxhc9OLYEKUrIIoXSD6`
+- [x] Vercel Org ID: `team_x1yX5LGP9hQd14xqyuHkFZEj`
+- [x] 本番URL: `https://doctor-direct-delta.vercel.app/`
 
-#### 1-2. Vercel Project ID取得
-1. **Vercel Dashboard** → 対象プロジェクト選択
-2. **Settings** → **General**
-3. **Project ID** をコピー 📋
+### 必要な手順
 
-#### 1-3. Vercel Org ID取得
-1. **Vercel Dashboard** → **Settings** → **General**
-2. **Team ID** をコピー 📋
-
-### STEP 2: GitHub Secrets設定
-
-1. **GitHub リポジトリ** → **Settings** タブ
-2. **Secrets and variables** → **Actions**
-3. **「New repository secret」** で以下を追加：
+#### 🚨 GitHub Secrets設定（要実行）
+GitHub Repository → Settings → Secrets and variables → Actions で以下を設定：
 
 ```
-# Vercel デプロイ用
-VERCEL_TOKEN = [STEP 1-1で取得したトークン]
-VERCEL_PROJECT_ID = [STEP 1-2で取得したProject ID]
-VERCEL_ORG_ID = [STEP 1-3で取得したOrg ID]
-
-# NextAuth.js 認証用
-NEXTAUTH_SECRET = [生成したシークレットキー]
-NEXTAUTH_URL = https://your-domain.vercel.app
-
-# OAuth設定 (オプション)
-GOOGLE_CLIENT_ID = [Google OAuth Client ID]
-GOOGLE_CLIENT_SECRET = [Google OAuth Client Secret]
-GITHUB_ID = [GitHub OAuth App ID]
-GITHUB_SECRET = [GitHub OAuth App Secret]
+VERCEL_TOKEN=fps9igcLXnBXi6QjlAZLXReB
+VERCEL_PROJECT_ID=prj_udZpAmo6gFxhc9OLYEKUrIIoXSD6
+VERCEL_ORG_ID=team_x1yX5LGP9hQd14xqyuHkFZEj
+NEXTAUTH_SECRET=tbeORFbiad6z+HIjK4M8n9u3VgysNbHcK4pCvTcy6X4=
+NEXTAUTH_URL=https://doctor-direct-delta.vercel.app/
 ```
 
-### STEP 3: デプロイフロー
+#### ✅ Vercel Dashboard環境変数設定済み
+Vercel Dashboard → Settings → Environment Variables で設定済み：
+- `NODE_ENV=production`
+- `NEXTAUTH_URL=https://doctor-direct-delta.vercel.app/`
+- `NEXTAUTH_SECRET=tbeORFbiad6z+HIjK4M8n9u3VgysNbHcK4pCvTcy6X4=`
 
-```mermaid
-graph LR
-    A[VSCode編集] --> B[git push]
-    B --> C[GitHub Actions]
-    C --> D[Vercel Deploy]
-    D --> E[本番サイト更新]
-```
+#### OAuth アプリ設定（認証を有効にする場合）
 
-#### 日常の開発フロー
+**Google OAuth:**
+1. [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
+2. Create OAuth 2.0 Client ID
+3. Authorized redirect URIs: `https://doctor-direct-delta.vercel.app/api/auth/callback/google`
+
+**GitHub OAuth:**
+1. GitHub → Settings → Developer settings → OAuth Apps
+2. New OAuth App
+3. Authorization callback URL: `https://doctor-direct-delta.vercel.app/api/auth/callback/github`
+
+## 🔄 日常の開発フロー
+
 ```bash
 # 1. ローカル開発
 npm run dev
 
-# 2. 変更をコミット
+# 2. 変更をコミット&プッシュ
 git add .
 git commit -m "feat: 新機能追加"
-
-# 3. プッシュ（自動デプロイ開始）
 git push origin main
+
+# 3. 自動デプロイ完了まで待機（約2-3分）
+# GitHub Actions → Vercel → 本番サイト更新
 ```
 
-#### Pull Request フロー
-```bash
-# 1. フィーチャーブランチ作成
-git checkout -b feature/new-feature
+## 📊 デプロイ確認
 
-# 2. 開発・コミット
-git add .
-git commit -m "feat: 新機能実装"
+1. **GitHub Actions**: Repository → Actions タブで実行状況確認
+2. **Vercel Dashboard**: Deployments で本番デプロイ確認
+3. **本番サイト**: `https://doctor-direct-delta.vercel.app/` で動作確認
+4. **認証テスト**: ヘッダーのログインボタンで認証機能確認
 
-# 3. プッシュ
-git push origin feature/new-feature
+## 🎯 本番環境情報
 
-# 4. GitHub でPR作成
-# → プレビューデプロイが自動実行される
-# → PRにプレビューURLが自動コメントされる
-
-# 5. レビュー完了後、mainにマージ
-# → 本番デプロイが自動実行される
+### 本番URL
+```
+https://doctor-direct-delta.vercel.app/
 ```
 
-## デプロイ確認方法
-
-### GitHub Actions確認
-1. **GitHub Repository** → **Actions** タブ
-2. ワークフロー実行状況を確認
-3. エラーがある場合はログを確認
-
-### Vercel確認
-1. **Vercel Dashboard** → **Deployments**
-2. デプロイ状況を確認
-3. 本番URLで動作確認
-
-### 認証機能確認
-1. 本番サイトでヘッダーの「ログイン」ボタンをクリック
-2. OAuth認証画面が表示されることを確認
-3. 認証後、ユーザー情報がヘッダーに表示されることを確認
+### 認証エンドポイント
+```
+https://doctor-direct-delta.vercel.app/api/auth/signin
+https://doctor-direct-delta.vercel.app/api/auth/signout
+```
 
 ## トラブルシューティング
+
+### ❌ 認証エラーが発生した場合
+1. **環境変数確認**: `.env.local` と Vercel 環境変数が一致しているか
+2. **OAuth設定確認**: リダイレクトURLが `https://doctor-direct-delta.vercel.app/` に設定されているか
+3. **NEXTAUTH_SECRET**: 本番とローカルで同じ値を使用しているか
+
+### ❌ GitHub Actions失敗
+1. **Secrets確認**: GitHub Secretsが正しく設定されているか
+2. **ビルドログ確認**: 認証関連のコンパイルエラーがないか
 
 ### ❌ ビルドエラーが発生した場合
 ```bash
@@ -221,16 +206,6 @@ git commit -m "fix: ビルドエラー修正"
 git push origin main
 ```
 
-### ❌ 認証エラーが発生した場合
-1. **環境変数確認**: Vercel環境変数が正しく設定されているか
-2. **OAuth設定確認**: リダイレクトURLが本番URLに設定されているか
-3. **NEXTAUTH_SECRET確認**: 本番環境で設定されているか
-
-### ❌ GitHub Actions失敗
-1. **Actions** タブでログを確認
-2. **Secrets** が正しく設定されているか確認
-3. 必要に応じてVercel Tokenを再生成
-
 ## プロジェクト構成
 
 ```
@@ -242,6 +217,12 @@ git push origin main
 │   ├── globals.css        # Tailwind CSS設定
 │   ├── layout.tsx         # ルートレイアウト（認証Provider含む）
 │   ├── page.tsx           # メインページ
+│   ├── ai-diagnosis/      # AI症状診断ページ
+│   ├── consultation/      # オンライン相談ページ
+│   ├── dashboard/         # ダッシュボードページ
+│   ├── doctor-search/     # 医師検索ページ
+│   ├── health-coach/      # 健康コーチページ
+│   ├── hospital-search/   # 病院検索ページ
 │   └── api/
 │       └── auth/
 │           └── [...nextauth]/
@@ -270,8 +251,21 @@ git push origin main
 - **医師検索**: 専門医師の検索・予約
 - **病院検索**: 近隣病院の検索機能
 - **オンライン相談**: リアルタイム医療相談
+- **ヘルスコーチ**: AI健康アドバイス機能
+- **ダッシュボード**: ユーザー健康管理画面
 - **ユーザー認証**: Google/GitHub OAuth対応
 - **セキュリティ**: 医療情報の暗号化保護
+
+## ✅ 自動デプロイのメリット
+
+- ✅ **完全自動化**: VSCodeからプッシュするだけ
+- ✅ **プレビュー機能**: Pull Request毎にプレビューURL生成
+- ✅ **安全性**: mainブランチのみ本番デプロイ
+- ✅ **高速**: 約2-3分で本番反映
+- ✅ **エラー検知**: ビルド失敗時に自動通知
+- ✅ **認証機能**: Google/GitHub OAuth完全対応
+- ✅ **セキュリティ**: JWT方式の安全なセッション管理
+- ✅ **本番環境**: https://doctor-direct-delta.vercel.app/ で稼働中
 
 ## 今後の拡張予定
 

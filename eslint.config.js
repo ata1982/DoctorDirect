@@ -1,46 +1,42 @@
-import js from '@eslint/js';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
 
-export default [
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends(
+    "next/core-web-vitals",
+    "next/typescript"
+  ),
   {
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'script',
-      globals: {
-        // Browser globals
-        window: 'readonly',
-        document: 'readonly',
-        console: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        alert: 'readonly',
-        confirm: 'readonly',
-        prompt: 'readonly',
-        fetch: 'readonly',
-        FormData: 'readonly',
-        URLSearchParams: 'readonly',
-        atob: 'readonly',
-        btoa: 'readonly',
-        IntersectionObserver: 'readonly',
-
-        // Custom globals
-        APP_CONFIG: 'readonly',
-        GOOGLE_CLIENT_ID: 'readonly',
-        AuthManager: 'writable',
-        DoctorDirectApp: 'writable',
-        UIManager: 'writable',
-        StorageManager: 'writable'
-      }
-    },
     rules: {
-      'no-console': 'warn',
-      'no-unused-vars': 'warn',
-      'no-redeclare': 'off',
-      'no-useless-escape': 'error'
-    },
-    files: ['static-website/scripts/*.js']
+      // Next.js specific rules
+      "@next/next/no-img-element": "error",
+      "@next/next/no-html-link-for-pages": "error",
+      
+      // TypeScript specific rules - 修正版
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      
+      // React specific rules
+      "react/jsx-uses-react": "off",
+      "react/react-in-jsx-scope": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      
+      // General code quality
+      "no-console": "warn",
+      "no-debugger": "error",
+      "prefer-const": "error",
+      "no-var": "error"
+    }
   }
 ];
+
+export default eslintConfig;

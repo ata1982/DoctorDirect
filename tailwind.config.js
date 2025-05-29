@@ -9,16 +9,63 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
+          50: '#f0f8ff',
+          100: '#e6f3ff',
+          500: '#007AFF',
+          600: '#0056CC',
+          700: '#003d99',
         },
-        accent: '#10b981',
+        accent: '#30D158',
+        'accent-orange': '#FF9500',
+        blue: {
+          50: '#f0f8ff',
+          100: '#e6f3ff',
+          500: '#007AFF',
+          600: '#0056CC',
+          700: '#003d99',
+        },
+        green: {
+          50: '#f0fff4',
+          500: '#30D158',
+        },
+        orange: {
+          50: '#fff7ed',
+          500: '#FF9500',
+        },
+        purple: {
+          50: '#faf5ff',
+          500: '#a855f7',
+        },
+        red: {
+          50: '#fef2f2',
+          500: '#ef4444',
+        },
+        indigo: {
+          50: '#eef2ff',
+          500: '#6366f1',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'system-ui', 'sans-serif'],
+        display: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif'],
+        body: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'system-ui', 'sans-serif'],
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.6s ease-out',
+        'slide-up': 'slideUp 0.8s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        slideUp: {
+          from: { opacity: '0', transform: 'translateY(30px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      backdropBlur: {
+        'apple': '20px',
       },
     },
   },

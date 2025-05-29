@@ -15,102 +15,181 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 pt-16">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5"></div>
+    <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 pt-20 overflow-hidden">
+      {/* 背景装飾 */}
+      <div className="absolute inset-0">
+        <div className={`absolute top-20 right-20 w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob transition-transform duration-1000 ${currentSlide === 0 ? 'translate-x-0' : 'translate-x-4'}`}></div>
+        <div className="absolute top-40 left-20 w-72 h-72 bg-green-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
       <div className="container relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-4rem)] py-20">
-          <div className="space-y-8">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+        <div className="grid lg:grid-cols-2 gap-20 items-center min-h-[calc(100vh-5rem)] py-24">
+          {/* 左側：メインメッセージとCTA */}
+          <div className="space-y-8 animate-fade-in">
+            <div className="inline-flex items-center px-4 py-2 bg-blue-50 rounded-full text-sm font-medium text-blue-700 mb-4">
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              医師認定済み・完全無料で開始
+            </div>
+            
+            <h1 className="text-display">
               <span className="block text-gray-900">AI診断と専門医相談で</span>
-              <span className="block text-accent bg-gradient-to-r from-primary-600 to-accent bg-clip-text text-transparent">
+              <span className="block text-primary bg-gradient-to-r from-blue-500 to-accent bg-clip-text text-transparent">
                 安心の医療サポートを
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl">
-              最新のAI技術と経験豊富な医師の専門知識を組み合わせ、24時間いつでも信頼できる医療アドバイスを提供します。
+            
+            <p className="text-xl text-secondary max-w-xl leading-relaxed">
+              症状が気になったその瞬間から、AI技術と経験豊富な医師があなたの健康をサポート。24時間いつでも、信頼できる医療アドバイスをお届けします。
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/signin" className="btn btn--primary btn--large group">
-                無料で始める
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            
+            {/* メインCTA */}
+            <div className="pt-6">
+              <Link href="/ai-diagnosis" className="btn btn--primary btn--xl group animate-slide-up inline-flex items-center">
+                <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                AI症状診断を無料で始める
+                <svg className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
                 </svg>
               </Link>
-              <Link href="/ai-diagnosis" className="btn btn--outline btn--large">
-                AI症状診断を試す
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-3 gap-8 pt-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary-600">100+</div>
-                <div className="text-sm text-gray-600">認定医師</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary-600">50+</div>
-                <div className="text-sm text-gray-600">提携病院</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary-600">1000+</div>
-                <div className="text-sm text-gray-600">完了相談</div>
-              </div>
+              
+              <p className="text-sm text-secondary mt-4 flex items-center">
+                <svg className="w-4 h-4 mr-2 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                登録無料・クレジットカード不要・30秒で開始
+              </p>
             </div>
           </div>
 
-          <div className="lg:pl-12">
-            <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">今すぐ使える機能</h3>
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">AI症状分析</h4>
-                    <p className="text-sm text-gray-600">症状を入力するだけで即座に分析結果を取得</p>
+          {/* 右側：メインビジュアル */}
+          <div className="lg:pl-16 animate-slide-up" style={{animationDelay: '0.3s'}}>
+            <div className="relative">
+              {/* メインビジュアル - オンライン医療相談のイメージ */}
+              <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-green-50 rounded-3xl p-8 overflow-hidden relative">
+                {/* 背景のグリッドパターン */}
+                <div className="absolute inset-0 opacity-5">
+                  <div className="h-full w-full" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='0.1'%3e%3ccircle cx='30' cy='30' r='2'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
+                  }}>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
+
+                {/* 医師のアバター（左上） */}
+                <div className="absolute top-8 left-8 animate-float">
+                  <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                      <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">リアルタイム相談</h4>
-                    <p className="text-sm text-gray-600">専門医とのライブチャット・ビデオ通話</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">安全保証</h4>
-                    <p className="text-sm text-gray-600">医師免許確認済み・プライバシー完全保護</p>
+                  <div className="mt-2 text-center">
+                    <div className="text-xs font-medium text-blue-600">Dr. 田中</div>
+                    <div className="w-6 h-1 bg-green-400 rounded-full mx-auto mt-1"></div>
                   </div>
                 </div>
+
+                {/* スマートフォン画面（中央右） */}
+                <div className="absolute top-1/2 right-8 transform -translate-y-1/2 animate-float animation-delay-1000">
+                  <div className="w-32 h-56 bg-gray-900 rounded-2xl p-1 shadow-2xl">
+                    <div className="w-full h-full bg-white rounded-xl overflow-hidden relative">
+                      {/* 画面上部 */}
+                      <div className="bg-blue-500 p-3 text-white text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">AI診断</span>
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        </div>
+                      </div>
+                      
+                      {/* チャット風のやり取り */}
+                      <div className="p-2 space-y-2 h-40 overflow-hidden">
+                        <div className="bg-gray-100 p-2 rounded-lg text-xs">
+                          頭痛と発熱があります
+                        </div>
+                        <div className="bg-blue-100 p-2 rounded-lg text-xs ml-4">
+                          症状を分析中...
+                        </div>
+                        <div className="bg-blue-500 text-white p-2 rounded-lg text-xs ml-2">
+                          風邪の症状の可能性があります。医師相談をお勧めします。
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI分析結果（右下） */}
+                <div className="absolute bottom-8 right-8 animate-float animation-delay-2000">
+                  <div className="bg-white rounded-xl shadow-lg p-4 max-w-36">
+                    <div className="flex items-center mb-2">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                        <svg className="w-3 h-3 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium text-gray-900">AI分析完了</span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      一般的な風邪症状
+                      <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                        <div className="bg-green-500 h-1 rounded-full w-4/5"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ハートビート（中央下） */}
+                <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
+                  <div className="flex items-center space-x-1">
+                    <svg className="w-6 h-6 text-red-500 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className={`w-1 bg-red-500 mx-px animate-pulse`} style={{
+                          height: `${Math.random() * 12 + 4}px`,
+                          animationDelay: `${i * 0.1}s`
+                        }}></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 浮遊する要素 */}
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center animate-float shadow-lg">
+                <svg className="w-6 h-6 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+              </div>
+              
+              <div className="absolute -bottom-4 -right-4 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center animate-float animation-delay-1000 shadow-lg">
+                <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center space-x-2 pb-8">
-          {[0, 1, 2].map((index) => (
-            <button
-              key={index}
-              type="button"
-              className={`w-3 h-3 rounded-full transition-colors ${
-                currentSlide === index ? 'bg-primary-600' : 'bg-gray-300'
-              }`}
-              onClick={() => setCurrentSlide(index)}
-              aria-label={`スライド${index + 1}`}
-            />
-          ))}
+        {/* 実績数値を下部に移動 */}
+        <div className="grid grid-cols-3 gap-8 py-16 border-t border-gray-200 animate-slide-up" style={{animationDelay: '0.6s'}}>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-500 mb-2">100+</div>
+            <div className="text-secondary font-medium">認定医師</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-green-500 mb-2">24/7</div>
+            <div className="text-secondary font-medium">利用可能</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-purple-500 mb-2">1000+</div>
+            <div className="text-secondary font-medium">完了相談</div>
+          </div>
         </div>
       </div>
     </section>

@@ -11,11 +11,19 @@ interface SymptomStep {
   type: 'single' | 'multiple'
 }
 
+interface DiagnosisResult {
+  primaryDiagnosis: string
+  confidence: number
+  recommendations: string[]
+  urgency: string
+  suggestedSpecialists: string[]
+}
+
 export default function AIDiagnosisPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [answers, setAnswers] = useState<{[key: number]: string[]}>({})
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [results, setResults] = useState<any>(null)
+  const [results, setResults] = useState<DiagnosisResult | null>(null)
 
   const steps: SymptomStep[] = [
     {

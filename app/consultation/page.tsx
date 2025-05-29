@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
@@ -110,10 +111,12 @@ export default function OnlineConsultationPage() {
             {/* サイドバー */}
             <div className="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6">
               <div className="text-center mb-6">
-                <img 
+                <Image 
                   src={selectedDoctor.avatar} 
                   alt={selectedDoctor.name}
-                  className="w-16 h-16 rounded-full mx-auto mb-3"
+                  width={64}
+                  height={64}
+                  className="rounded-full mx-auto mb-3"
                 />
                 <h3 className="font-semibold text-gray-900">{selectedDoctor.name}</h3>
                 <p className="text-sm text-gray-600">{selectedDoctor.specialty}</p>

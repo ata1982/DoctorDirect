@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import AuthButton from './AuthButton'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -17,31 +18,26 @@ export default function Header() {
             <span className="text-xl font-bold text-gray-900">Doctor Direct</span>
           </Link>
 
-          <nav className="hidden md:flex space-x-8">
-            <Link href="/doctors" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
-              医師検索
-            </Link>
-            <Link href="/hospitals" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
-              病院検索
-            </Link>
+          <nav className="hidden md:flex space-x-6">
             <Link href="/ai-diagnosis" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
               AI症状診断
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
-              サービス案内
+            <Link href="/doctor-search" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+              医師検索
             </Link>
-            <Link href="/contact" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
-              お問い合わせ
+            <Link href="/consultation" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+              オンライン相談
+            </Link>
+            <Link href="/health-coach" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+              健康コーチ
+            </Link>
+            <Link href="/dashboard" className="text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+              マイページ
             </Link>
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Link href="/signin" className="text-gray-600 hover:text-primary-600 font-medium text-sm transition-colors">
-              ログイン
-            </Link>
-            <Link href="/signup" className="btn btn--primary text-sm">
-              無料登録
-            </Link>
+            <AuthButton />
             <button 
               type="button" 
               className="md:hidden flex flex-col space-y-1 p-2"
@@ -54,6 +50,32 @@ export default function Header() {
             </button>
           </div>
         </div>
+
+        {/* モバイルメニュー */}
+        {isMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
+            <nav className="container py-4 space-y-2">
+              <Link href="/ai-diagnosis" className="block text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+                AI症状診断
+              </Link>
+              <Link href="/doctor-search" className="block text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+                医師検索
+              </Link>
+              <Link href="/consultation" className="block text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+                オンライン相談
+              </Link>
+              <Link href="/health-coach" className="block text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+                健康コーチ
+              </Link>
+              <Link href="/dashboard" className="block text-gray-600 hover:text-primary-600 font-medium text-sm px-3 py-2 rounded-md transition-colors">
+                マイページ
+              </Link>
+              <div className="px-3 py-2">
+                <AuthButton />
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   )

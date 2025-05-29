@@ -12,11 +12,11 @@ export default function CTA() {
             登録は無料、わずか3分で完了。AI症状診断から専門医相談まで、すべての機能を今すぐご利用いただけます。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signin" className="btn btn--large bg-white text-primary-600 hover:bg-gray-50 font-semibold">
-              無料で始める
+            <Link href="/ai-diagnosis" className="btn btn--large bg-white text-primary-600 hover:bg-gray-50 font-semibold">
+              AI症状診断を試す
             </Link>
-            <Link href="#demo" className="btn btn--outline btn--large border-white text-white hover:bg-white hover:text-primary-600">
-              デモを見る
+            <Link href="/doctor-search" className="btn btn--outline btn--large border-white text-white hover:bg-white hover:text-primary-600">
+              医師を検索
             </Link>
           </div>
         </div>

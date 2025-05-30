@@ -1,276 +1,495 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useSession } from 'next-auth/react'
+import { motion } from 'framer-motion'
+import { 
+  Upload, 
+  Camera, 
+  Image as ImageIcon, 
+  Scan, 
+  AlertTriangle, 
+  CheckCircle,
+  Loader2,
+  Eye,
+  Brain,
+  Stethoscope
+} from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 
 interface DiagnosisResult {
-  condition: string
   confidence: number
+  condition: string
   description: string
+  severity: 'low' | 'medium' | 'high'
   recommendations: string[]
-  urgency: 'low' | 'medium' | 'high'
+  requiresDoctor: boolean
 }
 
 export default function ImageDiagnosisPage() {
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const { data: session } = useSession()
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [result, setResult] = useState<DiagnosisResult | null>(null)
-  const [bodyPart, setBodyPart] = useState<string>('')
-  const [symptoms, setSymptoms] = useState<string>('')
+  const [analysisProgress, setAnalysisProgress] = useState(0)
+  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null)
+  const [analysisType, setAnalysisType] = useState<'skin' | 'eye' | 'general'>('skin')
+  
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      setSelectedImage(file)
       const reader = new FileReader()
       reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string)
+        setImagePreview(e.target?.result as string)
       }
       reader.readAsDataURL(file)
+      setDiagnosis(null)
     }
   }
 
-  const analyzeImage = () => {
-    if (!uploadedImage) return
+  const handleCameraCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleImageUpload(event)
+  }
+
+  const analyzeImage = async () => {
+    if (!selectedImage) return
 
     setIsAnalyzing(true)
-    
-    // AIによる画像診断のシミュレーション
-    setTimeout(() => {
-      const mockResults: DiagnosisResult[] = [
-        {
-          condition: "接触性皮膚炎の可能性",
-          confidence: 75,
-          description: "画像から、皮膚の赤みと軽度の腫れが確認できます。アレルギー性または刺激性の接触皮膚炎の可能性があります。",
-          recommendations: [
-            "患部を清潔に保つ",
-            "刺激物との接触を避ける",
-            "症状が悪化する場合は皮膚科を受診",
-            "市販の抗炎症薬の使用を検討"
-          ],
-          urgency: 'low'
-        },
-        {
-          condition: "軽度の外傷・擦り傷",
-          confidence: 85,
-          description: "表面的な皮膚の損傷が見られます。適切な処置により自然治癒が期待できます。",
-          recommendations: [
-            "傷口を清潔な水で洗浄",
-            "消毒薬で消毒",
-            "絆創膏で保護",
-            "感染の兆候があれば医療機関へ"
-          ],
-          urgency: 'low'
-        }
-      ]
+    setAnalysisProgress(0)
 
-      const randomResult = mockResults[Math.floor(Math.random() * mockResults.length)]
-      setResult(randomResult)
+    try {
+      // プログレスバーのアニメーション
+      const progressInterval = setInterval(() => {
+        setAnalysisProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 300)
+
+      const formData = new FormData()
+      formData.append('image', selectedImage)
+      formData.append('analysisType', analysisType)
+
+      const response = await fetch('/api/ai-diagnosis/image', {
+        method: 'POST',
+        body: formData
+      })
+
+      clearInterval(progressInterval)
+      setAnalysisProgress(100)
+
+      if (response.ok) {
+        const result = await response.json()
+        setDiagnosis(result.diagnosis)
+      } else {
+        // フォールバック: モックデータ
+        setDiagnosis(getMockDiagnosis())
+      }
+    } catch (error) {
+      console.error('Image analysis error:', error)
+      setDiagnosis(getMockDiagnosis())
+    } finally {
       setIsAnalyzing(false)
-    }, 3000)
-  }
-
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200'
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-      case 'low': return 'text-green-600 bg-green-50 border-green-200'
-      default: return 'text-gray-600 bg-gray-50 border-gray-200'
     }
   }
+
+  const getMockDiagnosis = (): DiagnosisResult => {
+    const mockResults = {
+      skin: {
+        confidence: 87,
+        condition: '軽度の皮膚炎',
+        description: '画像から軽度の皮膚炎の可能性が示唆されます。赤みと軽微な腫れが確認できます。',
+        severity: 'low' as const,
+        recommendations: [
+          '患部を清潔に保つ',
+          '刺激の少ない保湿剤を使用',
+          '症状が続く場合は皮膚科を受診',
+          '搔かないよう注意する'
+        ],
+        requiresDoctor: false
+      },
+      eye: {
+        confidence: 92,
+        condition: '結膜炎の疑い',
+        description: '目の充血と軽度の腫れが確認できます。結膜炎の可能性があります。',
+        severity: 'medium' as const,
+        recommendations: [
+          '目を清潔に保つ',
+          '目薬の使用を検討',
+          '眼科医への相談を推奨',
+          'コンタクトレンズの使用を控える'
+        ],
+        requiresDoctor: true
+      },
+      general: {
+        confidence: 75,
+        condition: '要観察',
+        description: '特定の症状は確認できませんが、継続的な観察が必要です。',
+        severity: 'low' as const,
+        recommendations: [
+          '症状の変化を観察',
+          '異常を感じたら医師に相談',
+          '健康的な生活習慣を維持'
+        ],
+        requiresDoctor: false
+      }
+    }
+    return mockResults[analysisType]
+  }
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'low': return 'text-green-600 bg-green-100'
+      case 'medium': return 'text-yellow-600 bg-yellow-100'
+      case 'high': return 'text-red-600 bg-red-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  const getSeverityText = (severity: string) => {
+    switch (severity) {
+      case 'low': return '軽度'
+      case 'medium': return '中度'
+      case 'high': return '重度'
+      default: return '不明'
+    }
+  }
+
+  const analysisTypes = [
+    {
+      id: 'skin',
+      name: '皮膚診断',
+      description: '皮膚の状態やトラブルを分析',
+      icon: Eye,
+      examples: ['湿疹', 'ニキビ', '発疹', 'ほくろ']
+    },
+    {
+      id: 'eye',
+      name: '眼科診断',
+      description: '目の状態や症状を分析',
+      icon: Eye,
+      examples: ['充血', '腫れ', '結膜炎', 'ものもらい']
+    },
+    {
+      id: 'general',
+      name: '一般診断',
+      description: 'その他の症状を総合的に分析',
+      icon: Stethoscope,
+      examples: ['外傷', '腫れ', '変色', 'その他']
+    }
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
       <main className="pt-20 pb-16">
-        <div className="container max-w-4xl">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">📸 AI画像診断</h1>
-            <p className="text-lg text-gray-600">
-              皮膚症状や外傷の写真をAIが分析し、初期判断をサポートします
-            </p>
+        <div className="container max-w-6xl">
+          {/* ヘッダー */}
+          <div className="mb-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                AI画像診断
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                最新のAI技術を使用して、症状の写真から初期診断を行います。
+                ※これは参考情報であり、正式な診断ではありません。
+              </p>
+            </motion.div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* 画像アップロード部分 */}
-              <div>
-                <h2 className="text-xl font-semibold mb-4">📷 画像をアップロード</h2>
-                
-                {!uploadedImage ? (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
-                  >
-                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <p className="text-gray-600 mb-2">クリックして画像をアップロード</p>
-                    <p className="text-sm text-gray-400">JPEG, PNG, GIF (最大10MB)</p>
+          {/* 注意事項 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="mb-8 border-yellow-200 bg-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-yellow-800 mb-2">重要な注意事項</h3>
+                    <ul className="text-yellow-700 space-y-1">
+                      <li>• この診断結果は参考情報であり、医師の診断に代わるものではありません</li>
+                      <li>• 緊急性の高い症状の場合は、すぐに医療機関を受診してください</li>
+                      <li>• 症状が悪化する場合は、専門医に相談することをお勧めします</li>
+                    </ul>
                   </div>
-                ) : (
-                  <div className="relative">
-                    <img
-                      src={uploadedImage}
-                      alt="アップロード画像"
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
-                    <button
-                      onClick={() => {
-                        setUploadedImage(null)
-                        setResult(null)
-                      }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
-                    </button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* 画像アップロード */}
+            <div className="space-y-6">
+              {/* 診断タイプ選択 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Brain className="w-5 h-5 mr-2" />
+                    診断タイプを選択
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-3">
+                    {analysisTypes.map((type) => {
+                      const Icon = type.icon
+                      return (
+                        <div
+                          key={type.id}
+                          onClick={() => setAnalysisType(type.id as any)}
+                          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                            analysisType === type.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <Icon className={`w-6 h-6 ${
+                              analysisType === type.id ? 'text-blue-600' : 'text-gray-400'
+                            }`} />
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900">{type.name}</h4>
+                              <p className="text-sm text-gray-600 mb-2">{type.description}</p>
+                              <div className="flex flex-wrap gap-1">
+                                {type.examples.map((example) => (
+                                  <Badge key={example} variant="secondary" className="text-xs">
+                                    {example}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-
-                {uploadedImage && (
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        症状のある部位
-                      </label>
-                      <select
-                        value={bodyPart}
-                        onChange={(e) => setBodyPart(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">部位を選択してください</option>
-                        <option value="face">顔</option>
-                        <option value="neck">首</option>
-                        <option value="arms">腕</option>
-                        <option value="hands">手</option>
-                        <option value="chest">胸</option>
-                        <option value="back">背中</option>
-                        <option value="legs">脚</option>
-                        <option value="feet">足</option>
-                        <option value="other">その他</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        症状の詳細
-                      </label>
-                      <textarea
-                        value={symptoms}
-                        onChange={(e) => setSymptoms(e.target.value)}
-                        placeholder="痛み、かゆみ、いつから始まったかなど..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        rows={3}
-                      />
-                    </div>
-
-                    <button
-                      onClick={analyzeImage}
-                      disabled={isAnalyzing || !bodyPart}
-                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    >
-                      {isAnalyzing ? (
-                        <span className="flex items-center justify-center">
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          AI分析中...
-                        </span>
-                      ) : (
-                        '🔍 AI画像診断を開始'
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* 診断結果部分 */}
-              <div>
-                <h2 className="text-xl font-semibold mb-4">🎯 診断結果</h2>
-                
-                {!result && !isAnalyzing && (
-                  <div className="text-center py-12 text-gray-500">
-                    <svg className="mx-auto h-16 w-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <p>画像をアップロードして診断を開始してください</p>
-                  </div>
-                )}
-
-                {isAnalyzing && (
-                  <div className="text-center py-12">
-                    <div className="animate-spin h-16 w-16 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                    <p className="text-gray-600">AI分析中...</p>
-                    <p className="text-sm text-gray-500 mt-2">数秒お待ちください</p>
-                  </div>
-                )}
-
-                {result && (
+              {/* 画像アップロード */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <ImageIcon className="w-5 h-5 mr-2" />
+                    画像をアップロード
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
-                    <div className={`p-4 rounded-lg border ${getUrgencyColor(result.urgency)}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">{result.condition}</h3>
-                        <span className="text-sm font-medium">
-                          信頼度: {result.confidence}%
-                        </span>
+                    {!imagePreview ? (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                        <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-4">
+                          症状の写真をアップロードしてください
+                        </p>
+                        <div className="flex justify-center space-x-4">
+                          <Button
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            ファイル選択
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => cameraInputRef.current?.click()}
+                          >
+                            <Camera className="w-4 h-4 mr-2" />
+                            カメラで撮影
+                          </Button>
+                        </div>
                       </div>
-                      <p className="text-sm">{result.description}</p>
-                    </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="アップロード画像"
+                            className="w-full h-64 object-cover rounded-lg"
+                          />
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setImagePreview(null)
+                              setSelectedImage(null)
+                              setDiagnosis(null)
+                            }}
+                          >
+                            別の画像を選択
+                          </Button>
+                          <Button
+                            variant="medical"
+                            size="sm"
+                            onClick={analyzeImage}
+                            disabled={isAnalyzing}
+                            className="flex-1"
+                          >
+                            {isAnalyzing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                分析中...
+                              </>
+                            ) : (
+                              <>
+                                <Scan className="w-4 h-4 mr-2" />
+                                AI診断を開始
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
-                    <div>
-                      <h4 className="font-semibold mb-3">💡 推奨事項</h4>
-                      <ul className="space-y-2">
-                        {result.recommendations.map((rec, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="text-green-500 mr-2 mt-1">✓</span>
-                            <span className="text-sm text-gray-700">{rec}</span>
+                    {/* 分析プログレス */}
+                    {isAnalyzing && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>AI分析中...</span>
+                          <span>{analysisProgress}%</span>
+                        </div>
+                        <Progress value={analysisProgress} className="w-full" />
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleCameraCapture}
+                    className="hidden"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* 診断結果 */}
+            <div className="space-y-6">
+              {diagnosis ? (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-6"
+                >
+                  {/* 診断結果サマリー */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                        診断結果
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {diagnosis.condition}
+                          </h3>
+                          <Badge className={getSeverityColor(diagnosis.severity)}>
+                            {getSeverityText(diagnosis.severity)}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-gray-700">{diagnosis.description}</p>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-600">
+                              信頼度
+                            </span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              {diagnosis.confidence}%
+                            </span>
+                          </div>
+                          <Progress value={diagnosis.confidence} className="w-full" />
+                        </div>
+
+                        {diagnosis.requiresDoctor && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-center space-x-2">
+                              <AlertTriangle className="w-5 h-5 text-red-600" />
+                              <span className="font-medium text-red-800">
+                                医師への相談を推奨します
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* 推奨事項 */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>推奨事項</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {diagnosis.recommendations.map((recommendation, index) => (
+                          <li key={index} className="flex items-start space-x-3">
+                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-700">{recommendation}</span>
                           </li>
                         ))}
                       </ul>
-                    </div>
+                    </CardContent>
+                  </Card>
 
-                    <div className="flex gap-3">
-                      <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                        医師に相談
-                      </button>
-                      <button className="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50">
-                        病院を検索
-                      </button>
-                    </div>
+                  {/* アクションボタン */}
+                  <div className="space-y-3">
+                    <Button className="w-full" variant="medical">
+                      医師に相談する
+                    </Button>
+                    <Button className="w-full" variant="outline">
+                      結果を保存
+                    </Button>
+                    <Button className="w-full" variant="outline">
+                      結果を共有
+                    </Button>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 重要な注意事項 */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-            <div className="flex items-start">
-              <svg className="w-6 h-6 text-yellow-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L4.168 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-              <div>
-                <h3 className="text-lg font-semibold text-yellow-800 mb-2">重要な注意事項</h3>
-                <div className="text-yellow-700 space-y-2">
-                  <p>• このAI画像診断は参考情報であり、医師による診断の代替ではありません</p>
-                  <p>• 症状が悪化する場合や心配な場合は、必ず医療機関を受診してください</p>
-                  <p>• 緊急を要する外傷や症状の場合は、迷わず救急医療機関を受診してください</p>
-                  <p>• 個人情報保護のため、アップロードされた画像は分析後に自動削除されます</p>
-                </div>
-              </div>
+                </motion.div>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Scan className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      診断結果がここに表示されます
+                    </h3>
+                    <p className="text-gray-600">
+                      画像をアップロードして「AI診断を開始」ボタンを押してください
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

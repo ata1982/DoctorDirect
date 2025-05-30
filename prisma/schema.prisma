@@ -1,0 +1,354 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(PATIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  doctorProfile    Doctor?
+  patientRecords   HealthRecord[]
+  appointments     Appointment[]  @relation("PatientAppointments")
+  doctorAppointments Appointment[] @relation("DoctorAppointments")
+  consultations    Consultation[] @relation("PatientConsultations")
+  doctorConsultations Consultation[] @relation("DoctorConsultations")
+  reviews          Review[]       @relation("PatientReviews")
+  receivedReviews  Review[]       @relation("DoctorReviews")
+  prescriptions    Prescription[]
+  wearableData     WearableData[]
+  notifications    Notification[]
+  emergencyContacts EmergencyContact[]
+  symptomEntries   SymptomEntry[]
+}
+
+model Doctor {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  licenseNumber     String   @unique
+  specialties       String[]
+  experience        Int
+  education         String
+  certifications    String[]
+  languages         String[]
+  availableHours    Json
+  consultationFee   Float
+  isVerified        Boolean  @default(false)
+  isAvailable       Boolean  @default(true)
+  rating            Float    @default(0)
+  totalReviews      Int      @default(0)
+  bio               String?
+  hospitalAffiliation String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+  consultations     Consultation[]
+  reviews           Review[]
+  prescriptions     Prescription[]
+}
+
+model HealthRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  type        RecordType
+  title       String
+  description String?
+  data        Json
+  attachments String[]
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  patientId   String
+  doctorId    String
+  type        AppointmentType
+  status      AppointmentStatus @default(SCHEDULED)
+  scheduledAt DateTime
+  duration    Int               @default(30)
+  notes       String?
+  symptoms    String[]
+  meetingLink String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  patient       User           @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  assignedDoctor User          @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade, map: "AppointmentDoctorUser")
+  doctor        Doctor         @relation(fields: [doctorId], references: [id], onDelete: Cascade, map: "AppointmentDoctorProfile")
+  consultation  Consultation?
+}
+
+model Consultation {
+  id            String             @id @default(cuid())
+  appointmentId String?            @unique
+  patientId     String
+  doctorId      String
+  type          ConsultationType
+  status        ConsultationStatus @default(ACTIVE)
+  startTime     DateTime
+  endTime       DateTime?
+  summary       String?
+  diagnosis     String?
+  recommendations String[]
+  attachments   String[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  patient       User         @relation("PatientConsultations", fields: [patientId], references: [id], onDelete: Cascade)
+  assignedDoctor User        @relation("DoctorConsultations", fields: [doctorId], references: [id], onDelete: Cascade, map: "ConsultationDoctorUser")
+  doctor        Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade, map: "ConsultationDoctorProfile")
+  messages      Message[]
+  prescriptions Prescription[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  consultationId String
+  senderId       String
+  senderType     SenderType
+  content        String
+  attachments    String[]
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  patientId String
+  doctorId  String
+  rating    Int
+  comment   String?
+  isAnonymous Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  patient User   @relation("PatientReviews", fields: [patientId], references: [id], onDelete: Cascade)
+  reviewedDoctor User @relation("DoctorReviews", fields: [doctorId], references: [id], onDelete: Cascade, map: "ReviewDoctorUser")
+  doctor  Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade, map: "ReviewDoctorProfile")
+}
+
+model Prescription {
+  id             String             @id @default(cuid())
+  userId         String
+  doctorId       String?
+  consultationId String?
+  type           PrescriptionType   @default(DIGITAL)
+  status         PrescriptionStatus @default(ACTIVE)
+  diagnosis      String
+  notes          String?
+  issueDate      DateTime           @default(now())
+  expiryDate     DateTime
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor       Doctor?       @relation(fields: [doctorId], references: [id])
+  consultation Consultation? @relation(fields: [consultationId], references: [id])
+  medications  Medication[]
+}
+
+model Medication {
+  id             String  @id @default(cuid())
+  prescriptionId String
+  name           String
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
+  sideEffects    String[]
+  isGeneric      Boolean @default(false)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+}
+
+model WearableData {
+  id         String   @id @default(cuid())
+  userId     String
+  deviceType String
+  deviceId   String?
+  dataType   String
+  value      Float
+  unit       String
+  metadata   Json     @default("{}")
+  recordedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dataType, recordedAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmergencyContact {
+  id           String @id @default(cuid())
+  userId       String
+  name         String
+  relationship String
+  phone        String
+  email        String?
+  isPrimary    Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SymptomEntry {
+  id                String   @id @default(cuid())
+  userId            String
+  symptoms          String[]
+  severity          Int
+  duration          String
+  triggers          String[] @default([])
+  notes             String?
+  primaryDiagnosis  String?
+  confidence        Float?
+  urgency           String?
+  recommendations   String[]
+  aiAnalysisData    Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum RecordType {
+  MEDICAL_HISTORY
+  LAB_RESULT
+  IMAGING
+  PRESCRIPTION
+  VACCINATION
+  ALLERGY
+  CHRONIC_CONDITION
+  SURGERY
+  OTHER
+}
+
+enum AppointmentType {
+  CONSULTATION
+  FOLLOW_UP
+  EMERGENCY
+  SECOND_OPINION
+  SPECIALIST_REFERRAL
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ConsultationType {
+  VIDEO_CALL
+  VOICE_CALL
+  CHAT
+  IN_PERSON
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SenderType {
+  PATIENT
+  DOCTOR
+  SYSTEM
+}
+
+enum PrescriptionType {
+  DIGITAL
+  PAPER
+  EMERGENCY
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  FILLED
+}
+
+enum NotificationType {
+  APPOINTMENT_REMINDER
+  PRESCRIPTION_EXPIRY
+  HEALTH_ALERT
+  EMERGENCY_ALERT
+  SYSTEM_NOTIFICATION
+  CONSULTATION_REQUEST
+  MESSAGE_RECEIVED
+}

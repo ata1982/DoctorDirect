@@ -1,786 +1,343 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { motion } from 'framer-motion'
+import { 
+  Heart, 
+  Activity, 
+  Apple, 
+  Moon, 
+  Brain, 
+  Target,
+  TrendingUp,
+  Calendar,
+  Award,
+  CheckCircle,
+  Clock
+} from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-
-interface Goal {
-  id: number
-  title: string
-  category: 'exercise' | 'nutrition' | 'sleep' | 'mental' | 'medical'
-  target: number
-  current: number
-  unit: string
-  deadline: string
-  priority: 'high' | 'medium' | 'low'
-  status: 'active' | 'completed' | 'paused'
-  progress: number
-}
-
-interface Recommendation {
-  id: number
-  type: 'tip' | 'exercise' | 'nutrition' | 'reminder'
-  title: string
-  description: string
-  category: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  timeRequired: number
-  icon: string
-  isCompleted: boolean
-}
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { getHealthCoachAdvice } from '@/lib/ai-client'
 
 export default function HealthCoachPage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'goals' | 'recommendations' | 'progress'>('dashboard')
-  const [showNewGoalModal, setShowNewGoalModal] = useState(false)
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
-  const [newGoal, setNewGoal] = useState({
-    title: '',
-    category: 'exercise' as const,
-    target: 0,
-    unit: '',
-    deadline: '',
-    priority: 'medium' as const
+  const { data: session } = useSession()
+  const [selectedCategory, setSelectedCategory] = useState<string>('nutrition')
+  const [advice, setAdvice] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [userProfile, setUserProfile] = useState({
+    age: 30,
+    goals: ['体重減少', '体力向上'],
+    currentHealth: '良好',
+    preferences: ['野菜中心', '週3回運動']
   })
 
-  const goals: Goal[] = [
+  const categories = [
     {
-      id: 1,
-      title: "毎日8000歩歩く",
-      category: "exercise",
-      target: 8000,
-      current: 6200,
-      unit: "歩",
-      deadline: "2024-06-30",
-      priority: "high",
-      status: "active",
-      progress: 77.5
+      id: 'nutrition',
+      name: '栄養指導',
+      icon: Apple,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      description: 'バランスの取れた食事プランを提案'
     },
     {
-      id: 2,
-      title: "体重を5kg減らす",
-      category: "nutrition",
-      target: 5,
-      current: 2.3,
-      unit: "kg",
-      deadline: "2024-08-31",
-      priority: "high",
-      status: "active",
-      progress: 46
+      id: 'exercise',
+      name: '運動指導',
+      icon: Activity,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      description: '効果的なエクササイズプログラム'
     },
     {
-      id: 3,
-      title: "毎日7時間睡眠",
-      category: "sleep",
-      target: 7,
-      current: 6.2,
-      unit: "時間",
-      deadline: "2024-07-15",
-      priority: "medium",
-      status: "active",
-      progress: 88.6
+      id: 'sleep',
+      name: '睡眠改善',
+      icon: Moon,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      description: '質の良い睡眠のためのアドバイス'
     },
     {
-      id: 4,
-      title: "週3回瞑想する",
-      category: "mental",
-      target: 3,
-      current: 3,
-      unit: "回/週",
-      deadline: "2024-06-15",
-      priority: "medium",
-      status: "completed",
-      progress: 100
+      id: 'stress',
+      name: 'ストレス管理',
+      icon: Brain,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-100',
+      description: 'メンタルヘルスとストレス対処法'
+    },
+    {
+      id: 'medication',
+      name: '服薬管理',
+      icon: Heart,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100',
+      description: '薬の適切な管理方法'
     }
   ]
 
-  const recommendations: Recommendation[] = [
+  const getAdvice = async (category: string) => {
+    setLoading(true)
+    try {
+      const result = await getHealthCoachAdvice(
+        category as any,
+        userProfile
+      )
+      setAdvice(result)
+    } catch (error) {
+      console.error('Health coach advice error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getAdvice(selectedCategory)
+  }, [selectedCategory])
+
+  const achievements = [
     {
-      id: 1,
-      type: "exercise",
-      title: "朝のストレッチルーティン",
-      description: "起床後10分間の全身ストレッチで血行を促進し、1日のエネルギーを高めましょう。",
-      category: "運動",
-      difficulty: "easy",
-      timeRequired: 10,
-      icon: "🧘‍♀️",
-      isCompleted: false
+      title: '7日連続記録',
+      description: '健康データを7日間連続で記録しました',
+      icon: Award,
+      earned: true,
+      date: '2024年3月15日'
     },
     {
-      id: 2,
-      type: "nutrition",
-      title: "水分補給リマインダー",
-      description: "1日2リットルの水分摂取を目標に、2時間おきにコップ1杯の水を飲みましょう。",
-      category: "栄養",
-      difficulty: "easy",
-      timeRequired: 1,
-      icon: "💧",
-      isCompleted: false
+      title: '目標達成',
+      description: '今月の運動目標を達成しました',
+      icon: Target,
+      earned: true,
+      date: '2024年3月10日'
     },
     {
-      id: 3,
-      type: "tip",
-      title: "階段を使う習慣",
-      description: "エレベーターの代わりに階段を使って、日常的な運動量を増やしましょう。",
-      category: "運動",
-      difficulty: "medium",
-      timeRequired: 5,
-      icon: "🚶‍♂️",
-      isCompleted: true
-    },
-    {
-      id: 4,
-      type: "reminder",
-      title: "就寝前のスマホ断ち",
-      description: "睡眠の質を向上させるため、就寝1時間前からスマホの使用を控えましょう。",
-      category: "睡眠",
-      difficulty: "medium",
-      timeRequired: 60,
-      icon: "📱",
-      isCompleted: false
+      title: '健康改善',
+      description: '血圧が正常範囲に改善されました',
+      icon: TrendingUp,
+      earned: false,
+      date: null
     }
   ]
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'exercise': return '🏃‍♂️'
-      case 'nutrition': return '🥗'
-      case 'sleep': return '😴'
-      case 'mental': return '🧠'
-      case 'medical': return '💊'
-      default: return '📋'
-    }
-  }
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'exercise': return 'bg-blue-100 text-blue-700'
-      case 'nutrition': return 'bg-green-100 text-green-700'
-      case 'sleep': return 'bg-purple-100 text-purple-700'
-      case 'mental': return 'bg-pink-100 text-pink-700'
-      case 'medical': return 'bg-red-100 text-red-700'
-      default: return 'bg-gray-100 text-gray-700'
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-700'
-      case 'medium': return 'bg-yellow-100 text-yellow-700'
-      case 'low': return 'bg-green-100 text-green-700'
-      default: return 'bg-gray-100 text-gray-700'
-    }
-  }
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-700'
-      case 'medium': return 'bg-yellow-100 text-yellow-700'
-      case 'hard': return 'bg-red-100 text-red-700'
-      default: return 'bg-gray-100 text-gray-700'
-    }
-  }
-
-  const activeGoals = goals.filter(goal => goal.status === 'active')
-  const completedGoals = goals.filter(goal => goal.status === 'completed')
-  const overallProgress = goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length
-
-  const addNewGoal = () => {
-    // 新しい目標を追加するロジック
-    setShowNewGoalModal(false)
-    setNewGoal({
-      title: '',
-      category: 'exercise',
-      target: 0,
-      unit: '',
-      deadline: '',
-      priority: 'medium'
-    })
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
       <main className="pt-20 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              🏋️‍♂️ パーソナルヘルスコーチ
+        <div className="container max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              AI健康コーチ
             </h1>
-            <p className="text-lg text-gray-600">
-              あなたの健康目標達成をサポートします
+            <p className="text-gray-600">
+              あなた専用の健康アドバイザーが最適な健康管理をサポートします
             </p>
-          </div>
+          </motion.div>
 
-          <div className="flex justify-center mb-8">
-            <div className="bg-white rounded-xl p-1 shadow-lg">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'dashboard'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                📊 ダッシュボード
-              </button>
-              <button
-                onClick={() => setActiveTab('goals')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'goals'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                🎯 目標管理
-              </button>
-              <button
-                onClick={() => setActiveTab('recommendations')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'recommendations'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                💡 おすすめ
-              </button>
-              <button
-                onClick={() => setActiveTab('progress')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'progress'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                📈 進捗分析
-              </button>
-            </div>
-          </div>
-
-          {activeTab === 'dashboard' && (
-            <div className="space-y-8">
-              <div className="grid md:grid-cols-4 gap-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">総合進捗</h3>
-                    <span className="text-2xl">📊</span>
-                  </div>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {Math.round(overallProgress)}%
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all"
-                      style={{ width: `${overallProgress}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">アクティブ目標</h3>
-                    <span className="text-2xl">🎯</span>
-                  </div>
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {activeGoals.length}
-                  </div>
-                  <p className="text-sm text-gray-600">進行中の目標</p>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">達成済み</h3>
-                    <span className="text-2xl">✅</span>
-                  </div>
-                  <div className="text-3xl font-bold text-purple-600 mb-2">
-                    {completedGoals.length}
-                  </div>
-                  <p className="text-sm text-gray-600">完了した目標</p>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">今週の成果</h3>
-                    <span className="text-2xl">🏆</span>
-                  </div>
-                  <div className="text-3xl font-bold text-orange-600 mb-2">
-                    12
-                  </div>
-                  <p className="text-sm text-gray-600">達成したタスク</p>
-                </div>
-              </div>
-
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-xl font-semibold mb-6 flex items-center">
-                    <span className="mr-2">🎯</span>
-                    今日の目標
-                  </h3>
-                  <div className="space-y-4">
-                    {activeGoals.slice(0, 3).map(goal => (
-                      <div key={goal.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{getCategoryIcon(goal.category)}</span>
-                            <span className="font-medium">{goal.title}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* カテゴリ選択 */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-900">コーチングカテゴリ</h2>
+              {categories.map((category) => {
+                const Icon = category.icon
+                return (
+                  <motion.div
+                    key={category.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Card
+                      className={`cursor-pointer transition-all ${
+                        selectedCategory === category.id
+                          ? 'ring-2 ring-blue-500 shadow-md'
+                          : 'hover:shadow-md'
+                      }`}
+                      onClick={() => setSelectedCategory(category.id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${category.bgColor}`}>
+                            <Icon className={`w-5 h-5 ${category.color}`} />
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(goal.priority)}`}>
-                            {goal.priority === 'high' ? '高' : goal.priority === 'medium' ? '中' : '低'}
-                          </span>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{category.name}</h3>
+                            <p className="text-xs text-gray-600">{category.description}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between mb-2">
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )
+              })}
+            </div>
+
+            {/* メインコンテンツ */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* AI アドバイス */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Brain className="w-5 h-5 mr-2 text-blue-600" />
+                    AI健康アドバイス
+                    <Badge variant="info" className="ml-2">個人化</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-gray-600">アドバイスを生成中...</span>
+                    </div>
+                  ) : advice ? (
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h3 className="font-semibold text-blue-900 mb-2">
+                          {categories.find(c => c.id === selectedCategory)?.name}アドバイス
+                        </h3>
+                        <p className="text-blue-800">{advice.advice}</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">推奨アクション</h4>
+                        <div className="space-y-2">
+                          {advice.actionItems?.map((item: string, index: number) => (
+                            <div key={index} className="flex items-center space-x-2">
+                              <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                              <span className="text-gray-700">{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">目標設定</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {advice.goals?.map((goal: string, index: number) => (
+                            <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                              <div className="flex items-center space-x-2">
+                                <Target className="w-4 h-4 text-indigo-600" />
+                                <span className="text-gray-800">{goal}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-4 h-4 text-gray-500" />
                           <span className="text-sm text-gray-600">
-                            {goal.current} / {goal.target} {goal.unit}
-                          </span>
-                          <span className="text-sm font-medium text-blue-600">
-                            {Math.round(goal.progress)}%
+                            推奨期間: {advice.timeline}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all"
-                            style={{ width: `${goal.progress}%` }}
-                          ></div>
-                        </div>
+                        <Button size="sm">
+                          カレンダーに追加
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-xl font-semibold mb-6 flex items-center">
-                    <span className="mr-2">💡</span>
-                    今日のおすすめ
-                  </h3>
-                  <div className="space-y-4">
-                    {recommendations.slice(0, 3).map(rec => (
-                      <div key={rec.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start gap-4">
-                          <span className="text-2xl">{rec.icon}</span>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-medium">{rec.title}</h4>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(rec.difficulty)}`}>
-                                {rec.difficulty === 'easy' ? '簡単' : rec.difficulty === 'medium' ? '普通' : '難しい'}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">
-                                ⏱️ {rec.timeRequired}分
-                              </span>
-                              <button className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700">
-                                実行する
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'goals' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">目標管理</h2>
-                <button
-                  onClick={() => setShowNewGoalModal(true)}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  ➕ 新しい目標を追加
-                </button>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
-                    <span className="mr-2">🎯</span>
-                    アクティブな目標
-                  </h3>
-                  <div className="space-y-4">
-                    {activeGoals.map(goal => (
-                      <div key={goal.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{getCategoryIcon(goal.category)}</span>
-                            <h4 className="font-medium">{goal.title}</h4>
-                          </div>
-                          <div className="flex gap-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(goal.category)}`}>
-                              {goal.category === 'exercise' ? '運動' : goal.category === 'nutrition' ? '栄養' : goal.category === 'sleep' ? '睡眠' : goal.category === 'mental' ? 'メンタル' : '医療'}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(goal.priority)}`}>
-                              {goal.priority === 'high' ? '高' : goal.priority === 'medium' ? '中' : '低'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-600">
-                              進捗: {goal.current} / {goal.target} {goal.unit}
-                            </span>
-                            <span className="text-sm font-medium text-blue-600">
-                              {Math.round(goal.progress)}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full transition-all"
-                              style={{ width: `${goal.progress}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>期限: {goal.deadline}</span>
-                          <button 
-                            onClick={() => setSelectedGoal(goal)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            詳細 →
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
-                    <span className="mr-2">✅</span>
-                    達成済みの目標
-                  </h3>
-                  <div className="space-y-4">
-                    {completedGoals.map(goal => (
-                      <div key={goal.id} className="border border-green-200 bg-green-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{getCategoryIcon(goal.category)}</span>
-                            <h4 className="font-medium text-green-800">{goal.title}</h4>
-                          </div>
-                          <span className="text-green-600 font-bold">100%</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-green-600">
-                          <span>{goal.target} {goal.unit} 達成</span>
-                          <span>🎉 完了!</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'recommendations' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">パーソナライズされたおすすめ</h2>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recommendations.map(rec => (
-                  <div key={rec.id} className={`bg-white rounded-2xl shadow-lg p-6 ${rec.isCompleted ? 'opacity-75' : ''}`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-3xl">{rec.icon}</span>
-                      {rec.isCompleted && (
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                          完了
-                        </span>
-                      )}
                     </div>
-                    
-                    <h3 className="text-lg font-semibold mb-2">{rec.title}</h3>
-                    <p className="text-gray-600 text-sm mb-4">{rec.description}</p>
-                    
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(rec.category)}`}>
-                        {rec.category}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(rec.difficulty)}`}>
-                        {rec.difficulty === 'easy' ? '簡単' : rec.difficulty === 'medium' ? '普通' : '難しい'}
-                      </span>
+                  ) : (
+                    <p className="text-gray-600">カテゴリを選択してアドバイスを受け取りましょう</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 進捗トラッキング */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+                    進捗トラッキング
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Apple className="w-5 h-5 text-green-600" />
+                        <span className="font-medium text-green-900">栄養</span>
+                      </div>
+                      <div className="text-2xl font-bold text-green-800">85%</div>
+                      <p className="text-sm text-green-700">今週の目標達成率</p>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        ⏱️ {rec.timeRequired}分
-                      </span>
-                      <button 
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          rec.isCompleted 
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
-                        disabled={rec.isCompleted}
-                      >
-                        {rec.isCompleted ? '完了済み' : '実行する'}
-                      </button>
+
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Activity className="w-5 h-5 text-blue-600" />
+                        <span className="font-medium text-blue-900">運動</span>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-800">3/5</div>
+                      <p className="text-sm text-blue-700">今週の運動回数</p>
+                    </div>
+
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Moon className="w-5 h-5 text-purple-600" />
+                        <span className="font-medium text-purple-900">睡眠</span>
+                      </div>
+                      <div className="text-2xl font-bold text-purple-800">7.2h</div>
+                      <p className="text-sm text-purple-700">平均睡眠時間</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </CardContent>
+              </Card>
 
-          {activeTab === 'progress' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">進捗分析</h2>
-              
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-6">カテゴリ別進捗</h3>
-                  <div className="space-y-4">
-                    {['exercise', 'nutrition', 'sleep', 'mental'].map(category => {
-                      const categoryGoals = goals.filter(g => g.category === category)
-                      const avgProgress = categoryGoals.length > 0 
-                        ? categoryGoals.reduce((acc, g) => acc + g.progress, 0) / categoryGoals.length 
-                        : 0
-                      
+              {/* 達成バッジ */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Award className="w-5 h-5 mr-2 text-yellow-600" />
+                    健康達成バッジ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {achievements.map((achievement, index) => {
+                      const Icon = achievement.icon
                       return (
-                        <div key={category} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{getCategoryIcon(category)}</span>
-                              <span className="font-medium">
-                                {category === 'exercise' ? '運動' : category === 'nutrition' ? '栄養' : category === 'sleep' ? '睡眠' : 'メンタル'}
-                              </span>
-                            </div>
-                            <span className="font-bold text-blue-600">{Math.round(avgProgress)}%</span>
+                        <div
+                          key={index}
+                          className={`p-4 rounded-lg border ${
+                            achievement.earned
+                              ? 'bg-yellow-50 border-yellow-200'
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3 mb-2">
+                            <Icon className={`w-6 h-6 ${
+                              achievement.earned ? 'text-yellow-600' : 'text-gray-400'
+                            }`} />
+                            <h4 className={`font-medium ${
+                              achievement.earned ? 'text-yellow-900' : 'text-gray-600'
+                            }`}>
+                              {achievement.title}
+                            </h4>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3">
-                            <div 
-                              className="bg-blue-600 h-3 rounded-full transition-all"
-                              style={{ width: `${avgProgress}%` }}
-                            ></div>
-                          </div>
+                          <p className={`text-sm ${
+                            achievement.earned ? 'text-yellow-800' : 'text-gray-500'
+                          }`}>
+                            {achievement.earned ? achievement.description : '未達成'}
+                          </p>
+                          {achievement.earned && achievement.date && (
+                            <p className="text-xs text-yellow-600 mt-2">
+                              獲得日: {achievement.date}
+                            </p>
+                          )}
                         </div>
                       )
                     })}
                   </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-6">週間サマリー</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-blue-900">最も進捗の良い目標</h4>
-                        <p className="text-sm text-blue-700">毎日7時間睡眠</p>
-                      </div>
-                      <span className="text-2xl">🏆</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-yellow-900">改善が必要な目標</h4>
-                        <p className="text-sm text-yellow-700">体重を5kg減らす</p>
-                      </div>
-                      <span className="text-2xl">⚠️</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-green-900">今週の成果</h4>
-                        <p className="text-sm text-green-700">3つの新しい習慣を開始</p>
-                      </div>
-                      <span className="text-2xl">🎉</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
-          )}
+          </div>
         </div>
       </main>
-
-      {showNewGoalModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold">新しい目標を追加</h3>
-              <button
-                onClick={() => setShowNewGoalModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">目標名</label>
-                <input
-                  type="text"
-                  value={newGoal.title}
-                  onChange={(e) => setNewGoal({...newGoal, title: e.target.value})}
-                  placeholder="例: 毎日30分ウォーキング"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">カテゴリ</label>
-                <select
-                  value={newGoal.category}
-                  onChange={(e) => setNewGoal({...newGoal, category: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="exercise">🏃‍♂️ 運動</option>
-                  <option value="nutrition">🥗 栄養</option>
-                  <option value="sleep">😴 睡眠</option>
-                  <option value="mental">🧠 メンタル</option>
-                  <option value="medical">💊 医療</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">目標値</label>
-                  <input
-                    type="number"
-                    value={newGoal.target}
-                    onChange={(e) => setNewGoal({...newGoal, target: Number(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">単位</label>
-                  <input
-                    type="text"
-                    value={newGoal.unit}
-                    onChange={(e) => setNewGoal({...newGoal, unit: e.target.value})}
-                    placeholder="例: 歩、kg、時間"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">期限</label>
-                <input
-                  type="date"
-                  value={newGoal.deadline}
-                  onChange={(e) => setNewGoal({...newGoal, deadline: e.target.value})}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">優先度</label>
-                <select
-                  value={newGoal.priority}
-                  onChange={(e) => setNewGoal({...newGoal, priority: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="high">🔴 高</option>
-                  <option value="medium">🟡 中</option>
-                  <option value="low">🟢 低</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={() => setShowNewGoalModal(false)}
-                className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={addNewGoal}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              >
-                目標を追加
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedGoal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold">目標詳細</h3>
-              <button
-                onClick={() => setSelectedGoal(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="text-center">
-                <span className="text-4xl mb-2 block">{getCategoryIcon(selectedGoal.category)}</span>
-                <h4 className="text-xl font-bold mb-2">{selectedGoal.title}</h4>
-                <div className="flex justify-center gap-2 mb-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(selectedGoal.category)}`}>
-                    {selectedGoal.category === 'exercise' ? '運動' : selectedGoal.category === 'nutrition' ? '栄養' : selectedGoal.category === 'sleep' ? '睡眠' : selectedGoal.category === 'mental' ? 'メンタル' : '医療'}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(selectedGoal.priority)}`}>
-                    {selectedGoal.priority === 'high' ? '高優先度' : selectedGoal.priority === 'medium' ? '中優先度' : '低優先度'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-center mb-4">
-                  <div className="text-3xl font-bold text-blue-600 mb-1">
-                    {Math.round(selectedGoal.progress)}%
-                  </div>
-                  <div className="text-sm text-gray-600">達成率</div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-                  <div 
-                    className="bg-blue-600 h-3 rounded-full transition-all"
-                    style={{ width: `${selectedGoal.progress}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>現在: {selectedGoal.current} {selectedGoal.unit}</span>
-                  <span>目標: {selectedGoal.target} {selectedGoal.unit}</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">期限:</span>
-                  <span className="font-medium">{selectedGoal.deadline}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">残り日数:</span>
-                  <span className="font-medium">
-                    {Math.ceil((new Date(selectedGoal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">ステータス:</span>
-                  <span className={`font-medium ${selectedGoal.status === 'active' ? 'text-green-600' : 'text-blue-600'}`}>
-                    {selectedGoal.status === 'active' ? '進行中' : '完了'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
-                  編集
-                </button>
-                <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                  進捗を更新
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </div>

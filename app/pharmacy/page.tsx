@@ -1,474 +1,348 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { motion } from 'framer-motion'
+import { 
+  Pill, 
+  Clock, 
+  MapPin, 
+  User, 
+  Calendar,
+  Bell,
+  CheckCircle,
+  AlertCircle,
+  Plus,
+  QrCode,
+  Download
+} from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-
-interface Pharmacy {
-  id: number
-  name: string
-  address: string
-  phone: string
-  distance: string
-  openHours: string
-  services: string[]
-  rating: number
-  isOpen: boolean
-  image: string
-}
-
-interface Prescription {
-  id: number
-  medicineName: string
-  dosage: string
-  frequency: string
-  duration: string
-  doctorName: string
-  issueDate: string
-  status: 'pending' | 'sent' | 'ready' | 'completed'
-}
-
-interface MedicationReminder {
-  id: number
-  medicineName: string
-  time: string
-  dosage: string
-  taken: boolean
-  frequency: string
-}
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 export default function PharmacyPage() {
-  const [activeTab, setActiveTab] = useState<'search' | 'prescriptions' | 'reminders' | 'history'>('search')
+  const { data: session } = useSession()
+  const [prescriptions, setPrescriptions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedPrescription, setSelectedPrescription] = useState<any>(null)
+  const [nearbyPharmacies, setNearbyPharmacies] = useState<any[]>([])
 
-  const pharmacies: Pharmacy[] = [
-    {
-      id: 1,
-      name: "ドラッグストア マツモトキヨシ 渋谷店",
-      address: "東京都渋谷区渋谷1-1-1",
-      phone: "03-1234-5678",
-      distance: "0.5km",
-      openHours: "9:00-22:00",
-      services: ["処方箋受付", "24時間受付", "在宅配送", "薬歴管理"],
-      rating: 4.5,
-      isOpen: true,
-      image: "/api/placeholder/300/200"
-    },
-    {
-      id: 2,
-      name: "すずらん薬局 新宿店",
-      address: "東京都新宿区新宿3-2-1",
-      phone: "03-2345-6789",
-      distance: "1.2km",
-      openHours: "8:00-20:00",
-      services: ["処方箋受付", "健康相談", "在宅配送"],
-      rating: 4.8,
-      isOpen: true,
-      image: "/api/placeholder/300/200"
-    },
-    {
-      id: 3,
-      name: "ファミリー薬局 池袋店",
-      address: "東京都豊島区池袋2-3-4",
-      phone: "03-3456-7890",
-      distance: "2.1km",
-      openHours: "10:00-19:00",
-      services: ["処方箋受付", "薬歴管理", "健康相談"],
-      rating: 4.2,
-      isOpen: false,
-      image: "/api/placeholder/300/200"
-    }
-  ]
+  useEffect(() => {
+    fetchPrescriptions()
+    fetchNearbyPharmacies()
+  }, [])
 
-  const prescriptions: Prescription[] = [
-    {
-      id: 1,
-      medicineName: "ロキソニン錠60mg",
-      dosage: "1錠",
-      frequency: "1日3回",
-      duration: "7日分",
-      doctorName: "田中医師",
-      issueDate: "2024-05-28",
-      status: "pending"
-    },
-    {
-      id: 2,
-      medicineName: "カロナール錠300",
-      dosage: "1錠",
-      frequency: "1日2回",
-      duration: "5日分",
-      doctorName: "佐藤医師",
-      issueDate: "2024-05-25",
-      status: "ready"
+  const fetchPrescriptions = async () => {
+    try {
+      const response = await fetch('/api/prescriptions')
+      const data = await response.json()
+      if (data.success) {
+        setPrescriptions(data.prescriptions)
+      }
+    } catch (error) {
+      console.error('Prescriptions fetch error:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
-  const medicationReminders: MedicationReminder[] = [
-    {
-      id: 1,
-      medicineName: "ロキソニン錠",
-      time: "08:00",
-      dosage: "1錠",
-      taken: true,
-      frequency: "朝"
-    },
-    {
-      id: 2,
-      medicineName: "ロキソニン錠",
-      time: "12:00",
-      dosage: "1錠",
-      taken: false,
-      frequency: "昼"
-    },
-    {
-      id: 3,
-      medicineName: "ロキソニン錠",
-      time: "18:00",
-      dosage: "1錠",
-      taken: false,
-      frequency: "夜"
-    }
-  ]
+  const fetchNearbyPharmacies = async () => {
+    // 近くの薬局を取得（モックデータ）
+    setNearbyPharmacies([
+      {
+        id: 1,
+        name: 'みどり薬局',
+        address: '東京都渋谷区神南1-1-1',
+        phone: '03-1234-5678',
+        distance: '0.3km',
+        rating: 4.5,
+        openHours: '9:00-20:00',
+        services: ['処方箋受付', '健康相談', '配達サービス']
+      },
+      {
+        id: 2,
+        name: 'さくら調剤薬局',
+        address: '東京都渋谷区渋谷2-2-2',
+        phone: '03-2345-6789',
+        distance: '0.5km',
+        rating: 4.3,
+        openHours: '8:30-19:30',
+        services: ['処方箋受付', '在宅医療', '薬歴管理']
+      }
+    ])
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-      case 'sent': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-      case 'ready': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      case 'completed': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      case 'ACTIVE':
+        return 'bg-green-100 text-green-800'
+      case 'COMPLETED':
+        return 'bg-blue-100 text-blue-800'
+      case 'EXPIRED':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return '送信待ち'
-      case 'sent': return '送信済み'
-      case 'ready': return '受取可能'
-      case 'completed': return '完了'
-      default: return 'unknown'
+      case 'ACTIVE':
+        return '服用中'
+      case 'COMPLETED':
+        return '完了'
+      case 'EXPIRED':
+        return '期限切れ'
+      default:
+        return status
     }
   }
 
-  const sendPrescription = (_prescriptionId: number, _pharmacyId: number) => {
-    alert('処方箋をデジタル送信しました。薬局からの連絡をお待ちください。')
-  }
-
-  const handlePharmacyDetails = (pharmacy: Pharmacy) => {
-    alert(`${pharmacy.name}の詳細情報を表示します。`)
-  }
-
-  const handleAddPrescription = () => {
-    alert('新しい処方箋の追加フォームを表示します。')
+  const formatMedications = (medications: any[]) => {
+    if (!Array.isArray(medications)) return '処方薬情報なし'
+    return medications.map(med => med.name).join(', ')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
       <main className="pt-20 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              💊 薬局連携サービス
+        <div className="container max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              処方箋・薬局管理
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              処方箋の送信から服薬管理まで、すべてデジタルで完結
+            <p className="text-gray-600">
+              処方箋の管理と近くの薬局を探すことができます
             </p>
-          </div>
+          </motion.div>
 
-          {/* タブナビゲーション */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-1 shadow-lg">
-              <button
-                onClick={() => setActiveTab('search')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'search'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                🔍 薬局検索
-              </button>
-              <button
-                onClick={() => setActiveTab('prescriptions')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'prescriptions'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                📋 処方箋管理
-              </button>
-              <button
-                onClick={() => setActiveTab('reminders')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'reminders'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                ⏰ 服薬管理
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'history'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                📚 薬歴管理
-              </button>
-            </div>
-          </div>
-
-          {/* 薬局検索タブ */}
-          {activeTab === 'search' && (
-            <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">近くの薬局を検索</h2>
-                
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder="薬局名または住所で検索"
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* 処方箋一覧 */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center">
+                      <Pill className="w-5 h-5 mr-2 text-blue-600" />
+                      処方箋一覧
+                    </CardTitle>
+                    <Button size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      新規追加
+                    </Button>
                   </div>
-                  <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    検索
-                  </button>
-                </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : prescriptions.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Pill className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">処方箋がありません</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {prescriptions.map((prescription) => (
+                        <motion.div
+                          key={prescription.id}
+                          whileHover={{ scale: 1.02 }}
+                          className="border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer"
+                          onClick={() => setSelectedPrescription(prescription)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="font-semibold text-gray-900 mb-1">
+                                {formatMedications(prescription.medications)}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                処方日: {new Date(prescription.prescribedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Badge className={getStatusColor(prescription.status)}>
+                              {getStatusText(prescription.status)}
+                            </Badge>
+                          </div>
 
-                <div className="grid gap-6">
-                  {pharmacies.map(pharmacy => (
-                    <div key={pharmacy.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{pharmacy.name}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              pharmacy.isOpen 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                            }`}>
-                              {pharmacy.isOpen ? '営業中' : '営業時間外'}
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="flex items-center text-gray-600">
+                              <Clock className="w-4 h-4 mr-2" />
+                              {prescription.frequency}
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              {prescription.duration}
+                            </div>
+                          </div>
+
+                          {prescription.doctor && (
+                            <div className="flex items-center mt-3 pt-3 border-t">
+                              <User className="w-4 h-4 mr-2 text-gray-500" />
+                              <span className="text-sm text-gray-600">
+                                処方医: {prescription.doctor.name}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline">
+                                <QrCode className="w-4 h-4 mr-2" />
+                                QRコード
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <Download className="w-4 h-4 mr-2" />
+                                PDF
+                              </Button>
+                            </div>
+                            <Button size="sm">
+                              薬局に送信
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 服薬リマインダー */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Bell className="w-5 h-5 mr-2 text-orange-600" />
+                    服薬リマインダー
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center">
+                        <AlertCircle className="w-5 h-5 text-orange-600 mr-3" />
+                        <div>
+                          <p className="font-medium text-orange-900">アムロジピン錠</p>
+                          <p className="text-sm text-orange-700">朝食後 - 8:00 AM</p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        服用完了
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div className="flex items-center">
+                        <Clock className="w-5 h-5 text-blue-600 mr-3" />
+                        <div>
+                          <p className="font-medium text-blue-900">メトホルミン錠</p>
+                          <p className="text-sm text-blue-700">夕食後 - 6:00 PM</p>
+                        </div>
+                      </div>
+                      <Badge variant="info">予定</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* 近くの薬局 */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MapPin className="w-5 h-5 mr-2 text-green-600" />
+                    近くの薬局
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="住所または薬局名で検索..."
+                      className="w-full"
+                    />
+                    
+                    {nearbyPharmacies.map((pharmacy) => (
+                      <motion.div
+                        key={pharmacy.id}
+                        whileHover={{ scale: 1.02 }}
+                        className="border rounded-lg p-4 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900">{pharmacy.name}</h3>
+                          <Badge variant="success">{pharmacy.distance}</Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <MapPin className="w-4 h-4 mr-2" />
+                            {pharmacy.address}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 mr-2" />
+                            {pharmacy.openHours}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center">
+                            <span className="text-yellow-500">★</span>
+                            <span className="text-sm text-gray-600 ml-1">
+                              {pharmacy.rating}
                             </span>
                           </div>
-                          <p className="text-gray-600 dark:text-gray-300 mb-2">{pharmacy.address}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                            <span>📞 {pharmacy.phone}</span>
-                            <span>📍 {pharmacy.distance}</span>
-                            <span>🕒 {pharmacy.openHours}</span>
-                          </div>
+                          <Button size="sm" variant="outline">
+                            詳細を見る
+                          </Button>
                         </div>
-                        <div className="text-right">
-                          <div className="flex items-center gap-1 mb-2">
-                            <span className="text-yellow-500">⭐</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{pharmacy.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {pharmacy.services.map((service, index) => (
-                          <span key={index} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm">
-                            {service}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-3">
-                        <button 
-                          onClick={() => handlePharmacyDetails(pharmacy)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          詳細を見る
-                        </button>
-                        <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                          お気に入り
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 処方箋管理タブ */}
-          {activeTab === 'prescriptions' && (
-            <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">処方箋管理</h2>
-                  <button 
-                    onClick={handleAddPrescription}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    ➕ 新しい処方箋
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {prescriptions.map(prescription => (
-                    <div key={prescription.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{prescription.medicineName}</h3>
-                          <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
-                            <div>
-                              <span className="font-medium">用量:</span> {prescription.dosage}
-                            </div>
-                            <div>
-                              <span className="font-medium">服用頻度:</span> {prescription.frequency}
-                            </div>
-                            <div>
-                              <span className="font-medium">日数:</span> {prescription.duration}
-                            </div>
-                            <div>
-                              <span className="font-medium">担当医:</span> {prescription.doctorName}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(prescription.status)}`}>
-                            {getStatusText(prescription.status)}
-                          </span>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            発行日: {prescription.issueDate}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        {prescription.status === 'pending' && (
-                          <select 
-                            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                sendPrescription(prescription.id, parseInt(e.target.value))
-                              }
-                            }}
-                          >
-                            <option value="">送信先薬局を選択</option>
-                            {pharmacies.map(pharmacy => (
-                              <option key={pharmacy.id} value={pharmacy.id}>{pharmacy.name}</option>
-                            ))}
-                          </select>
-                        )}
-                        {prescription.status === 'ready' && (
-                          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                            受取予約
-                          </button>
-                        )}
-                        <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                          詳細
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 服薬管理タブ */}
-          {activeTab === 'reminders' && (
-            <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">今日の服薬スケジュール</h2>
-                
-                <div className="space-y-4">
-                  {medicationReminders.map(reminder => (
-                    <div key={reminder.id} className={`border rounded-lg p-4 ${
-                      reminder.taken 
-                        ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20' 
-                        : 'border-gray-200 dark:border-gray-700'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-4 h-4 rounded-full border-2 ${
-                            reminder.taken 
-                              ? 'bg-green-500 border-green-500' 
-                              : 'border-gray-300 dark:border-gray-600'
-                          }`}></div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white">{reminder.medicineName}</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
-                              {reminder.time} ({reminder.frequency}) - {reminder.dosage}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          {!reminder.taken && (
-                            <button className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                              服用済み
-                            </button>
-                          )}
-                          <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                            ⏰ 時間変更
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">服薬アドバイス</h3>
-                  <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
-                    <li>• 薬は決められた時間に服用しましょう</li>
-                    <li>• 飲み忘れた場合は次回分と一緒に飲まず、医師に相談してください</li>
-                    <li>• 副作用を感じた場合は速やかに医師または薬剤師に相談してください</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 薬歴管理タブ */}
-          {activeTab === 'history' && (
-            <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">服薬履歴</h2>
-                
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-                    <h3 className="text-lg font-semibold mb-2">今月の服薬率</h3>
-                    <div className="text-3xl font-bold">87%</div>
-                    <p className="text-blue-100">前月より +5%</p>
+                      </motion.div>
+                    ))}
                   </div>
-                  
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
-                    <h3 className="text-lg font-semibold mb-2">連続服薬日数</h3>
-                    <div className="text-3xl font-bold">12日</div>
-                    <p className="text-green-100">継続中</p>
-                  </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">最近の処方薬</h3>
-                  {prescriptions.map(prescription => (
-                    <div key={prescription.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">{prescription.medicineName}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {prescription.frequency} | {prescription.duration} | {prescription.doctorName}
-                          </p>
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {prescription.issueDate}
-                        </div>
-                      </div>
+              {/* 薬局サービス */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>薬局サービス</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                    <QrCode className="w-5 h-5 text-blue-600 mr-3" />
+                    <div>
+                      <p className="font-medium text-blue-900">電子処方箋</p>
+                      <p className="text-sm text-blue-700">QRコードで簡単受付</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+
+                  <div className="flex items-center p-3 bg-green-50 rounded-lg">
+                    <MapPin className="w-5 h-5 text-green-600 mr-3" />
+                    <div>
+                      <p className="font-medium text-green-900">配達サービス</p>
+                      <p className="text-sm text-green-700">自宅まで薬をお届け</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center p-3 bg-purple-50 rounded-lg">
+                    <User className="w-5 h-5 text-purple-600 mr-3" />
+                    <div>
+                      <p className="font-medium text-purple-900">薬剤師相談</p>
+                      <p className="text-sm text-purple-700">お薬に関する相談</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          )}
+          </div>
         </div>
       </main>
 

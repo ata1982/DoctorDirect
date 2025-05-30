@@ -90,22 +90,6 @@ body {
   @apply px-12 py-6 text-xl;
 }
 
-.btn--secondary {
-  @apply bg-gray-100 text-gray-900 border border-gray-200;
-}
-
-.btn--secondary:hover {
-  @apply bg-gray-200;
-}
-
-.dark .btn--secondary {
-  @apply bg-gray-800 text-gray-100 border-gray-700;
-}
-
-.dark .btn--secondary:hover {
-  @apply bg-gray-700;
-}
-
 /* Apple-style typography */
 .text-display {
   font-size: clamp(2.5rem, 5vw, 4rem);
@@ -176,16 +160,6 @@ body {
 
 .dark .card:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-/* Backdrop blur effect like Apple */
-.backdrop-blur-apple {
-  backdrop-filter: saturate(180%) blur(20px);
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.dark .backdrop-blur-apple {
-  background: rgba(26, 26, 26, 0.8);
 }
 
 /* Smooth animations */

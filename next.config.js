@@ -11,6 +11,16 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // ESLint設定
+  eslint: {
+    // 本番ビルド時にESLintエラーを警告として扱う
+    ignoreDuringBuilds: false,
+  },
+  // TypeScript設定
+  typescript: {
+    // 型チェックエラーがあってもビルドを続行（本番環境では注意）
+    ignoreBuildErrors: false,
+  },
   // PWA対応
   experimental: {
     optimizeCss: true,

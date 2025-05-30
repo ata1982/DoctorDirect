@@ -28,9 +28,25 @@ jobs:
 
       - name: Run Lint
         run: npm run lint
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
 
       - name: Run Build
         run: npm run build
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          GOOGLE_GEMINI_API_KEY: ${{ secrets.GOOGLE_GEMINI_API_KEY }}
+          XAI_GROK_API_KEY: ${{ secrets.XAI_GROK_API_KEY }}
+          DEFAULT_AI_PROVIDER: gemini
+          FALLBACK_AI_PROVIDER: grok
+          GEMINI_MODEL: gemini-2.5-flash-preview-05-20
+          XAI_MODEL: grok-3
+          XAI_API_URL: https://api.x.ai/v1
+          RATE_LIMIT_WINDOW: 300000
+          RATE_LIMIT_MAX_REQUESTS: 20
+          LOG_LEVEL: error
 
       - name: Deploy to Vercel (Preview)
         if: github.event_name == 'pull_request'

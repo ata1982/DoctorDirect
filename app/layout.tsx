@@ -1,10 +1,12 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import AuthProvider from '../components/AuthProvider'
+import AuthProvider from '@/components/AuthProvider'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import AIChatBot from '@/components/AIChatBot'
 
 export const metadata: Metadata = {
-  title: 'Doctor Direct - AI診断と専門医相談で安心の医療サポート',
-  description: '最新のAI技術と経験豊富な医師の専門知識を組み合わせ、24時間いつでも信頼できる医療アドバイスを提供します。',
+  title: 'Doctor Direct - 24時間医療相談プラットフォーム',
+  description: 'AI診断、オンライン相談、医師検索を提供する総合医療プラットフォーム',
 }
 
 export default function RootLayout({
@@ -15,9 +17,12 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+            <AIChatBot />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

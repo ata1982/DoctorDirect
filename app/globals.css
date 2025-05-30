@@ -8,6 +8,12 @@
   --color-text-secondary: #86868B;
 }
 
+/* Dark mode variables */
+.dark {
+  --color-text-primary: #F5F5F7;
+  --color-text-secondary: #A1A1A6;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -28,6 +34,11 @@ body {
   background-color: #ffffff;
   letter-spacing: -0.022em;
   font-feature-settings: 'kern' 1;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  background-color: #1a1a1a;
 }
 
 .container {
@@ -63,6 +74,14 @@ body {
   @apply bg-blue-500 text-white;
 }
 
+.dark .btn--outline {
+  @apply border-blue-400 text-blue-400;
+}
+
+.dark .btn--outline:hover {
+  @apply bg-blue-400 text-gray-900;
+}
+
 .btn--large {
   @apply px-10 py-5 text-lg;
 }
@@ -77,6 +96,14 @@ body {
 
 .btn--secondary:hover {
   @apply bg-gray-200;
+}
+
+.dark .btn--secondary {
+  @apply bg-gray-800 text-gray-100 border-gray-700;
+}
+
+.dark .btn--secondary:hover {
+  @apply bg-gray-700;
 }
 
 /* Apple-style typography */
@@ -124,14 +151,22 @@ body {
   @apply text-blue-500;
 }
 
+.dark .text-primary {
+  @apply text-blue-400;
+}
+
 .text-secondary {
   color: var(--color-text-secondary);
 }
 
 /* Apple-style card */
 .card {
-  @apply bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300;
+  @apply bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.dark .card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .card:hover {
@@ -139,10 +174,18 @@ body {
   transform: translateY(-2px);
 }
 
+.dark .card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
 /* Backdrop blur effect like Apple */
 .backdrop-blur-apple {
   backdrop-filter: saturate(180%) blur(20px);
   background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .backdrop-blur-apple {
+  background: rgba(26, 26, 26, 0.8);
 }
 
 /* Smooth animations */
@@ -237,6 +280,10 @@ body {
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.5s;
+}
+
+.dark .trust-indicator::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
 .trust-indicator:hover::before {

@@ -1,516 +1,361 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import React, { useState, useEffect } from 'react'
+import { getSession } from 'next-auth/react'
 import { 
   Calendar, 
-  Heart, 
-  Activity, 
   Users, 
-  AlertTriangle, 
+  Activity, 
+  Bell, 
+  Heart, 
+  Thermometer, 
+  Zap, 
   TrendingUp,
-  Clock,
-  Bell,
-  Settings,
-  FileText,
-  Shield,
-  Pill
 } from 'lucide-react'
-import ModernHeader from '@/components/ModernHeader'
-import ModernFooter from '@/components/ModernFooter'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useAppStore } from '@/lib/store'
-import { log, LogLevel } from '@/lib/utils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
 
-export default function DashboardPage() {
-  const { data: session } = useSession()
-  const { healthData, notifications } = useAppStore()
-  const [activeTab, setActiveTab] = useState('overview')
-  const [healthRecords, setHealthRecords] = useState<any[]>([])
-  const [appointments, setAppointments] = useState<any[]>([])
-  const [prescriptions, setPrescriptions] = useState<any[]>([])
+// 型定義を追加
+interface HealthData {
+  vitals: {
+    heartRate: number
+    bloodPressure: string
+    temperature: number
+    oxygenSaturation: number
+  }
+  steps: number
+  calories: number
+  sleep: number
+}
+
+interface Appointment {
+  id: string
+  doctorName: string
+  specialty: string
+  date: string
+  time: string
+  status: 'confirmed' | 'pending' | 'completed'
+}
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'warning' | 'success' | 'error'
+  timestamp: string
+  read: boolean
+}
+
+export default function Dashboard() {
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null)
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [_healthData, setHealthData] = useState<HealthData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [vitalSigns, setVitalSigns] = useState<Record<string, unknown>>({})
+  const [healthMetrics, setHealthMetrics] = useState<Record<string, unknown>>({})
+  const [activityData, setActivityData] = useState<Record<string, unknown>>({})
 
   useEffect(() => {
-    if (session?.user) {
-      fetchDashboardData()
-    }
-  }, [session])
+    fetchDashboardData()
+  }, [])
 
   const fetchDashboardData = async () => {
     try {
-      // 健康記録の取得
-      const healthResponse = await fetch('/api/health-records')
-      const healthData = await healthResponse.json()
-      setHealthRecords(healthData.records || [])
+      const session = await getSession()
+      if (session?.user) {
+        setUser(session.user as { name: string; email: string })
+      }
 
-      // 予約の取得
-      const appointmentsResponse = await fetch('/api/appointments')
-      const appointmentsData = await appointmentsResponse.json()
-      setAppointments(appointmentsData.appointments || [])
+      // 予約情報を取得
+      const appointmentsRes = await fetch('/api/appointments')
+      if (appointmentsRes.ok) {
+        const data = await appointmentsRes.json()
+        setAppointments(data.appointments || [])
+      }
 
-      // 処方箋の取得
-      const prescriptionsResponse = await fetch('/api/prescriptions')
-      const prescriptionsData = await prescriptionsResponse.json()
-      setPrescriptions(prescriptionsData.prescriptions || [])
+      // 通知を取得
+      setNotifications([
+        {
+          id: '1',
+          title: '予約確認',
+          message: '明日の診察予約が確認されました',
+          type: 'success',
+          timestamp: '2024-01-15T10:00:00Z',
+          read: false
+        },
+        {
+          id: '2',
+          title: 'ヘルスアラート',
+          message: '心拍数が高値を示しています',
+          type: 'warning',
+          timestamp: '2024-01-15T09:30:00Z',
+          read: false
+        }
+      ])
+
+      // ヘルスデータを取得
+      setHealthData({
+        vitals: {
+          heartRate: 72,
+          bloodPressure: '120/80',
+          temperature: 36.5,
+          oxygenSaturation: 98
+        },
+        steps: 8500,
+        calories: 2100,
+        sleep: 7.5
+      })
+
+      setVitalSigns({
+        heartRate: 72,
+        bloodPressure: '120/80',
+        temperature: 36.5,
+        oxygenSaturation: 98
+      })
+
+      setHealthMetrics({
+        steps: 8500,
+        calories: 2100,
+        sleep: 7.5,
+        weight: 70
+      })
+
+      setActivityData({
+        todaySteps: 8500,
+        weeklyAverage: 7800,
+        monthlyGoal: 250000,
+        currentMonth: 180000
+      })
+
     } catch (error) {
-      log(LogLevel.ERROR, 'Failed to fetch dashboard data', { error: error instanceof Error ? error.message : String(error) })
+      console.error('ダッシュボードデータの取得に失敗しました:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const stats = [
-    {
-      title: '今月の相談',
-      value: '3',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      title: '次回予約',
-      value: '2日後',
-      icon: Calendar,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      title: '健康スコア',
-      value: '85',
-      icon: Heart,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
-    },
-    {
-      title: '服薬記録',
-      value: '98%',
-      icon: Pill,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    }
+  const healthTrends = [
+    { name: '心拍数', value: 72, unit: 'bpm', trend: '+2%', color: 'text-green-600' },
+    { name: '血圧', value: '120/80', unit: 'mmHg', trend: '安定', color: 'text-blue-600' },
+    { name: '体重', value: 70, unit: 'kg', trend: '-0.5kg', color: 'text-green-600' },
+    { name: '睡眠', value: 7.5, unit: '時間', trend: '+0.5h', color: 'text-blue-600' }
   ]
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'consultation',
-      title: '田中先生との相談',
-      description: 'ビデオ通話による健康相談',
-      timestamp: '2時間前',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      type: 'symptom',
-      title: '症状記録',
-      description: '軽度の頭痛を記録',
-      timestamp: '1日前',
-      status: 'recorded'
-    },
-    {
-      id: 3,
-      type: 'medication',
-      title: '薬の服用',
-      description: '血圧薬を服用',
-      timestamp: '1日前',
-      status: 'taken'
-    }
-  ]
-
-  const upcomingReminders = [
-    {
-      id: 1,
-      type: 'appointment',
-      title: '定期検診',
-      time: '明日 14:00',
-      doctor: '山田先生'
-    },
-    {
-      id: 2,
-      type: 'medication',
-      title: '血圧薬の服用',
-      time: '今日 20:00',
-      doctor: null
-    }
-  ]
-
-  const tabs = [
-    { id: 'overview', label: '概要', icon: Activity },
-    { id: 'health', label: '健康記録', icon: Heart },
-    { id: 'appointments', label: '予約', icon: Calendar },
-    { id: 'prescriptions', label: '処方箋', icon: Pill },
-    { id: 'settings', label: '設定', icon: Settings }
-  ]
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">ダッシュボードを読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ModernHeader />
-      
-      <main className="pt-20 pb-16">
-        <div className="container max-w-7xl">
-          {/* ヘッダー */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  こんにちは、{session?.user?.name}さん
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  今日も健康管理をしっかりと行いましょう
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm">
-                  <Bell className="w-4 h-4 mr-2" />
-                  通知 {notifications.length > 0 && `(${notifications.length})`}
-                </Button>
-                <Button variant="medical" size="sm">
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  緊急相談
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* タブナビゲーション */}
-          <div className="mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </nav>
-            </div>
-          </div>
-
-          {/* 概要タブ */}
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* 統計カード */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, index) => {
-                  const Icon = stat.icon
-                  return (
-                    <div key={stat.title}>
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="flex items-center">
-                            <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                              <Icon className={`w-6 h-6 ${stat.color}`} />
-                            </div>
-                            <div className="ml-4">
-                              <p className="text-sm font-medium text-gray-600">
-                                {stat.title}
-                              </p>
-                              <p className="text-2xl font-bold text-gray-900">
-                                {stat.value}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* 最近のアクティビティ */}
-                <div className="lg:col-span-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Activity className="w-5 h-5 mr-2" />
-                        最近のアクティビティ
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {recentActivities.map((activity) => (
-                          <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
-                            <div className="flex-shrink-0">
-                              {activity.type === 'consultation' && <Users className="w-5 h-5 text-blue-600" />}
-                              {activity.type === 'symptom' && <AlertTriangle className="w-5 h-5 text-yellow-600" />}
-                              {activity.type === 'medication' && <Pill className="w-5 h-5 text-green-600" />}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900">
-                                {activity.title}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {activity.description}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {activity.timestamp}
-                              </p>
-                            </div>
-                            <Badge variant={activity.status === 'completed' ? 'success' : 'info'}>
-                              {activity.status === 'completed' ? '完了' : '記録済み'}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* 今後のリマインダー */}
-                <div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Clock className="w-5 h-5 mr-2" />
-                        今後の予定
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {upcomingReminders.map((reminder) => (
-                          <div key={reminder.id} className="p-3 border border-gray-200 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-sm font-medium text-gray-900">
-                                {reminder.title}
-                              </h4>
-                              <Badge variant="info">
-                                {reminder.type === 'appointment' ? '予約' : '服薬'}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              {reminder.time}
-                            </p>
-                            {reminder.doctor && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                担当: {reminder.doctor}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                        <Button className="w-full" variant="outline" size="sm">
-                          すべて表示
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 健康記録タブ */}
-          {activeTab === 'health' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>健康記録の追加</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Button variant="outline" className="h-20 flex-col">
-                      <Heart className="w-6 h-6 mb-2" />
-                      血圧測定
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col">
-                      <Activity className="w-6 h-6 mb-2" />
-                      体重記録
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col">
-                      <TrendingUp className="w-6 h-6 mb-2" />
-                      血糖値
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>健康記録一覧</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {healthRecords.map((record) => (
-                      <div key={record.id} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-medium text-gray-900">
-                            {record.title}
-                          </h4>
-                          <Badge variant="success">
-                            {record.status === 'completed' ? '完了' : '未完了'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {record.doctor} • {record.date}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="text-xs rounded-full" style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#e0f7fa', color: '#00796b' }}>
-                            {record.type}
-                          </span>
-                          <span className="text-xs rounded-full" style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#f3e5f5', color: '#6a1b9a' }}>
-                            {record.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* 予約タブ */}
-          {activeTab === 'appointments' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>予約管理</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {appointments.map((appointment) => (
-                      <div key={appointment.id} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-medium text-gray-900">
-                            {appointment.doctor}
-                          </h4>
-                          <Badge variant="info">
-                            {appointment.status === 'confirmed' ? '確定' : '保留'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {appointment.specialty} • {appointment.date} {appointment.time}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="text-xs rounded-full" style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#e8f5e9', color: '#2e7d32' }}>
-                            {appointment.type}
-                          </span>
-                          <span className="text-xs rounded-full" style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#f3e5f5', color: '#6a1b9a' }}>
-                            {appointment.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* 処方箋タブ */}
-          {activeTab === 'prescriptions' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>処方箋管理</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {prescriptions.map((prescription) => (
-                      <div key={prescription.id} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-medium text-gray-900">
-                            {prescription.medication}
-                          </h4>
-                          <Badge variant="success">
-                            {prescription.status === 'active' ? '有効' : '無効'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {prescription.doctor} • {prescription.date}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="text-xs rounded-full" style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#e8f5e9', color: '#2e7d32' }}>
-                            {prescription.type}
-                          </span>
-                          <span className="text-xs rounded-full" style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#f3e5f5', color: '#6a1b9a' }}>
-                            {prescription.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* 設定タブ */}
-          {activeTab === 'settings' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>プロフィール設定</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">氏名</label>
-                      <input 
-                        type="text" 
-                        defaultValue="山田 太郎"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">メールアドレス</label>
-                      <input 
-                        type="email" 
-                        defaultValue="yamada@example.com"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">電話番号</label>
-                      <input 
-                        type="tel" 
-                        defaultValue="090-1234-5678"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">生年月日</label>
-                      <input 
-                        type="date" 
-                        defaultValue="1990-01-01"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">アレルギー・既往歴</label>
-                    <textarea 
-                      rows={4}
-                      defaultValue="特になし"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-                      保存
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* ヘッダー */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            おかえりなさい、{user?.name}さん
+          </h1>
+          <p className="text-gray-600">今日の健康状態を確認しましょう</p>
         </div>
-      </main>
 
-      <ModernFooter />
+        {/* クイックアクション */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Button className="h-16 bg-blue-600 hover:bg-blue-700">
+            <Calendar className="mr-2 h-5 w-5" />
+            予約を取る
+          </Button>
+          <Button variant="outline" className="h-16">
+            <Users className="mr-2 h-5 w-5" />
+            医師を探す
+          </Button>
+          <Button variant="outline" className="h-16">
+            <Activity className="mr-2 h-5 w-5" />
+            健康記録
+          </Button>
+          <Button variant="outline" className="h-16">
+            <Bell className="mr-2 h-5 w-5" />
+            緊急相談
+          </Button>
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">概要</TabsTrigger>
+            <TabsTrigger value="health">健康データ</TabsTrigger>
+            <TabsTrigger value="appointments">予約</TabsTrigger>
+            <TabsTrigger value="reports">レポート</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* バイタルサイン */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">心拍数</CardTitle>
+                  <Heart className="h-4 w-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">72 bpm</div>
+                  <p className="text-xs text-muted-foreground">正常範囲</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">血圧</CardTitle>
+                  <Activity className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">120/80</div>
+                  <p className="text-xs text-muted-foreground">理想的</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">体温</CardTitle>
+                  <Thermometer className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">36.5°C</div>
+                  <p className="text-xs text-muted-foreground">正常</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">歩数</CardTitle>
+                  <Zap className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">8,500</div>
+                  <p className="text-xs text-muted-foreground">目標まで1,500歩</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* 健康トレンド */}
+            <Card>
+              <CardHeader>
+                <CardTitle>健康トレンド</CardTitle>
+                <CardDescription>過去7日間の健康指標の変化</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {healthTrends.map((trend, _index) => (
+                    <div key={trend.name} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{trend.name}</span>
+                        <Badge variant="secondary" className={trend.color}>
+                          {trend.trend}
+                        </Badge>
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {trend.value} {trend.unit}
+                      </div>
+                      <Progress value={75} className="h-2" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 今日の予定 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>今日の予定</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {appointments.slice(0, 3).map((appointment) => (
+                    <div key={appointment.id} className="flex items-center space-x-4 mb-4 last:mb-0">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Calendar className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{appointment.doctorName}</p>
+                        <p className="text-sm text-gray-600">{appointment.specialty}</p>
+                        <p className="text-sm text-gray-500">{appointment.time}</p>
+                      </div>
+                      <Badge 
+                        variant={appointment.status === 'confirmed' ? 'default' : 'secondary'}
+                      >
+                        {appointment.status === 'confirmed' ? '確定' : '保留中'}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>通知</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {notifications.slice(0, 4).map((notification) => (
+                    <div key={notification.id} className="flex items-start space-x-3 mb-4 last:mb-0">
+                      <div className={`w-2 h-2 rounded-full mt-2 ${
+                        notification.type === 'warning' ? 'bg-yellow-500' : 
+                        notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{notification.title}</p>
+                        <p className="text-sm text-gray-600">{notification.message}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(notification.timestamp).toLocaleString('ja-JP')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* 他のタブコンテンツ */}
+          <TabsContent value="health">
+            <Card>
+              <CardHeader>
+                <CardTitle>詳細な健康データ</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>ここに詳細な健康データが表示されます。</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appointments">
+            <Card>
+              <CardHeader>
+                <CardTitle>予約管理</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>ここに予約の詳細が表示されます。</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <Card>
+              <CardHeader>
+                <CardTitle>健康レポート</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>ここに健康レポートが表示されます。</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }

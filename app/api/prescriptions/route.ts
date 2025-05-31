@@ -3,7 +3,34 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { log, LogLevel } from '@/lib/utils'
 
-export async function GET(request: NextRequest) {
+// 型定義を追加
+type PrescriptionWithRelations = {
+  id: string
+  diagnosis: string | null
+  notes: string | null
+  medications: Array<{
+    id: string
+    name: string
+    dosage: string
+    frequency: string
+    duration: string
+    instructions: string | null
+    sideEffects: string[]
+  }>
+  issueDate: Date
+  expiryDate: Date | null
+  status: string
+  type: string
+  doctor?: {
+    user: {
+      name: string | null
+      image: string | null
+    }
+    specialties: string[]
+  } | null
+}
+
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession()
     if (!session?.user?.email) {
@@ -38,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      prescriptions: prescriptions.map(prescription => ({
+      prescriptions: prescriptions.map((prescription: PrescriptionWithRelations) => ({
         id: prescription.id,
         diagnosis: prescription.diagnosis,
         notes: prescription.notes,
@@ -72,7 +99,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { medications, dosage, frequency, duration, instructions, doctorId, pharmacyId } = body
+    const { 
+      appointmentId, 
+      medications, 
+      instructions, 
+      pharmacyId: _pharmacyId, 
+      validUntil: _validUntil 
+    } = body
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
@@ -85,7 +118,7 @@ export async function POST(request: NextRequest) {
     const prescription = await prisma.prescription.create({
       data: {
         userId: user.id,
-        doctorId: doctorId || null,
+        doctorId: appointmentId || null,
         diagnosis: `処方箋 - ${new Date().toLocaleDateString()}`,
         notes: instructions,
         type: 'DIGITAL',
@@ -111,15 +144,15 @@ export async function POST(request: NextRequest) {
     // 薬剤情報を別途作成
     if (medications) {
       const medicationData = JSON.parse(medications)
-      await Promise.all(medicationData.map((med: any) => 
+      await Promise.all(medicationData.map((med: { name: string; dosage: string; frequency: string; duration: string; instructions: string; sideEffects?: string[] }) => 
         prisma.medication.create({
           data: {
             prescriptionId: prescription.id,
             name: med.name,
-            dosage: dosage || med.dosage,
-            frequency: frequency || med.frequency,
-            duration: duration || med.duration,
-            instructions: instructions || med.instructions,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            duration: med.duration,
+            instructions: med.instructions,
             sideEffects: med.sideEffects || []
           }
         })

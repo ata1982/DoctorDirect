@@ -1,7 +1,7 @@
-import { OpenAPIV3 } from 'openapi3-ts';
+import { OpenApiBuilder, OpenAPIObject } from 'openapi3-ts/oas31';
 
-export const openApiSpec: OpenAPIV3.Document = {
-  openapi: '3.0.3',
+export const openApiSpec: OpenAPIObject = {
+  openapi: '3.1.0',
   info: {
     title: 'DoctorDirect API',
     description: 'Comprehensive medical consultation platform API',
@@ -377,3 +377,7 @@ export const openApiSpec: OpenAPIV3.Document = {
     },
   ],
 };
+
+export function generateApiDocs() {
+  return new OpenApiBuilder(openApiSpec).getSpec();
+}

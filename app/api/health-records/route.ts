@@ -3,6 +3,14 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { log, LogLevel } from '@/lib/utils'
 
+// 型定義を簡素化
+interface HealthRecordData {
+  type: string
+  title: string
+  description?: string
+  data: Record<string, unknown>
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession()
@@ -12,8 +20,6 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
@@ -23,33 +29,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const whereClause: any = { userId: user.id }
-
+    const where: Record<string, unknown> = { userId: user.id }
+    
     if (type) {
-      whereClause.type = type
-    }
-
-    if (startDate && endDate) {
-      whereClause.createdAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
-      }
+      where.type = type
     }
 
     const healthRecords = await prisma.healthRecord.findMany({
-      where: whereClause,
+      where,
       orderBy: { createdAt: 'desc' },
       take: 100
     })
 
-    // 統計計算
-    const stats = await calculateHealthStats(healthRecords)
-
     return NextResponse.json({
       success: true,
-      records: healthRecords,
-      stats,
-      total: healthRecords.length
+      records: healthRecords
     })
 
   } catch (error) {
@@ -68,8 +62,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { type, value, unit, notes } = body
+    const body: HealthRecordData = await request.json()
+    const { type, title, description, data } = body
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
@@ -79,28 +73,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // typeをRecordTypeに変換（デフォルトはOTHER）
+    const recordType = type === 'MEDICAL_HISTORY' ? 'MEDICAL_HISTORY' :
+                      type === 'LAB_RESULT' ? 'LAB_RESULT' :
+                      type === 'IMAGING' ? 'IMAGING' :
+                      type === 'PRESCRIPTION' ? 'PRESCRIPTION' :
+                      type === 'VACCINATION' ? 'VACCINATION' :
+                      type === 'ALLERGY' ? 'ALLERGY' :
+                      type === 'CHRONIC_CONDITION' ? 'CHRONIC_CONDITION' :
+                      type === 'SURGERY' ? 'SURGERY' : 'OTHER'
+
     const healthRecord = await prisma.healthRecord.create({
       data: {
         userId: user.id,
-        type,
-        title: `${type}記録`,
-        description: notes,
-        data: {
-          value: parseFloat(value),
-          unit: unit || '',
-          notes: notes || ''
-        },
-        attachments: []
+        type: recordType as any,
+        title: title || 'Health Record',
+        description: description || null,
+        data: JSON.parse(JSON.stringify(data || {}))
       }
     })
 
-    // 健康アラートチェック
-    const alerts = await checkHealthAlerts(user.id, type, parseFloat(value))
-
     return NextResponse.json({
       success: true,
-      record: healthRecord,
-      alerts
+      record: healthRecord
     })
 
   } catch (error) {
@@ -112,103 +107,53 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function calculateHealthStats(records: any[]) {
-  const stats: any = {}
-  
-  // 血圧統計
-  const bloodPressureRecords = records.filter(r => r.type === 'BLOOD_PRESSURE')
-  if (bloodPressureRecords.length > 0) {
-    const values = bloodPressureRecords.map(r => r.value)
-    stats.bloodPressure = {
-      average: values.reduce((a, b) => a + b, 0) / values.length,
-      latest: values[0],
-      trend: calculateTrend(values.slice(0, 7)) // 最新7日間のトレンド
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession()
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const body = await request.json()
+    const { recordId, data: updateData } = body
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const existingRecord = await prisma.healthRecord.findFirst({
+      where: {
+        id: recordId,
+        userId: user.id
+      }
+    })
+
+    if (!existingRecord) {
+      return NextResponse.json({ error: 'Health record not found' }, { status: 404 })
+    }
+
+    const updatedRecord = await prisma.healthRecord.update({
+      where: { id: recordId },
+      data: {
+        data: { ...existingRecord.data as Record<string, unknown>, ...updateData },
+        updatedAt: new Date()
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      record: updatedRecord
+    })
+
+  } catch (error) {
+    log(LogLevel.ERROR, 'Failed to update health record', { error: error instanceof Error ? error.message : String(error) })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
-
-  // 心拍数統計
-  const heartRateRecords = records.filter(r => r.type === 'HEART_RATE')
-  if (heartRateRecords.length > 0) {
-    const values = heartRateRecords.map(r => r.value)
-    stats.heartRate = {
-      average: values.reduce((a, b) => a + b, 0) / values.length,
-      latest: values[0],
-      trend: calculateTrend(values.slice(0, 7))
-    }
-  }
-
-  // 体重統計
-  const weightRecords = records.filter(r => r.type === 'WEIGHT')
-  if (weightRecords.length > 0) {
-    const values = weightRecords.map(r => r.value)
-    stats.weight = {
-      average: values.reduce((a, b) => a + b, 0) / values.length,
-      latest: values[0],
-      trend: calculateTrend(values.slice(0, 30)) // 最新30日間のトレンド
-    }
-  }
-
-  return stats
-}
-
-function calculateTrend(values: number[]) {
-  if (values.length < 2) return 'stable'
-  
-  const recent = values.slice(0, Math.ceil(values.length / 2))
-  const older = values.slice(Math.ceil(values.length / 2))
-  
-  const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
-  const olderAvg = older.reduce((a, b) => a + b, 0) / older.length
-  
-  const change = ((recentAvg - olderAvg) / olderAvg) * 100
-  
-  if (change > 5) return 'increasing'
-  if (change < -5) return 'decreasing'
-  return 'stable'
-}
-
-async function checkHealthAlerts(userId: string, type: string, value: number) {
-  const alerts = []
-
-  // 血圧アラート
-  if (type === 'BLOOD_PRESSURE') {
-    if (value > 140) {
-      alerts.push({
-        type: 'warning',
-        message: '血圧が高めです。医師への相談をお勧めします。',
-        urgency: 'medium'
-      })
-    }
-    if (value > 180) {
-      alerts.push({
-        type: 'emergency',
-        message: '血圧が非常に高いです。すぐに医療機関を受診してください。',
-        urgency: 'high'
-      })
-    }
-  }
-
-  // 心拍数アラート
-  if (type === 'HEART_RATE') {
-    if (value > 100 || value < 60) {
-      alerts.push({
-        type: 'warning',
-        message: '心拍数が正常範囲外です。体調に注意してください。',
-        urgency: 'medium'
-      })
-    }
-  }
-
-  // 血糖値アラート
-  if (type === 'BLOOD_SUGAR') {
-    if (value > 200) {
-      alerts.push({
-        type: 'warning',
-        message: '血糖値が高いです。食事や運動に注意してください。',
-        urgency: 'medium'
-      })
-    }
-  }
-
-  return alerts
 }

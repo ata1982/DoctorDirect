@@ -6,87 +6,68 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const specialty = searchParams.get('specialty')
-    const location = searchParams.get('location')
-    const availability = searchParams.get('availability')
-    const rating = searchParams.get('rating')
-    const language = searchParams.get('language')
+    const _location = searchParams.get('location')
+    const _availability = searchParams.get('availability')
 
-    const whereClause: any = {
-      isVerified: true,
-      AND: []
-    }
-
+    // 検索条件を構築
+    const where: Record<string, unknown> = {}
+    
     if (specialty) {
-      whereClause.AND.push({
-        specialties: {
-          has: specialty
-        }
-      })
-    }
-
-    if (rating) {
-      whereClause.AND.push({
-        rating: {
-          gte: parseFloat(rating)
-        }
-      })
-    }
-
-    if (language) {
-      whereClause.AND.push({
-        languages: {
-          has: language
-        }
-      })
+      where.specialties = {
+        has: specialty
+      }
     }
 
     const doctors = await prisma.doctor.findMany({
-      where: whereClause,
+      where,
       include: {
         user: {
           select: {
-            id: true,
             name: true,
-            image: true,
-            email: true
+            email: true,
+            image: true
           }
         },
-        consultations: {
-          where: {
-            status: 'COMPLETED'
-          },
+        reviews: {
           select: {
-            id: true
+            rating: true
           }
         }
       },
-      orderBy: [
-        { rating: 'desc' },
-        { totalReviews: 'desc' }
-      ],
       take: 20
     })
 
-    const formattedDoctors = doctors.map(doctor => ({
-      id: doctor.id,
-      name: doctor.user.name,
-      image: doctor.user.image,
-      specialties: doctor.specialties,
-      experience: doctor.experience,
-      rating: doctor.rating,
-      reviewCount: doctor.totalReviews,
-      consultationFee: doctor.consultationFee,
-      languages: doctor.languages,
-      bio: doctor.bio,
-      totalConsultations: doctor.consultations.length,
-      availableHours: doctor.availableHours,
-      isVerified: doctor.isVerified
-    }))
+    // 平均評価を計算
+    const doctorsWithRating = doctors.map((doctor) => {
+      const ratings = doctor.reviews.map(review => review.rating)
+      const averageRating = ratings.length > 0 
+        ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+        : 0
+
+      return {
+        id: doctor.id,
+        name: doctor.user.name,
+        email: doctor.user.email,
+        image: doctor.user.image,
+        specialties: doctor.specialties,
+        experience: doctor.experience,
+        education: doctor.education,
+        certifications: doctor.certifications,
+        consultationFee: doctor.consultationFee,
+        availableHours: doctor.availableHours,
+        rating: Math.round(averageRating * 10) / 10,
+        reviewCount: doctor.reviews.length,
+        isVerified: doctor.isVerified,
+        isAvailable: doctor.isAvailable,
+        languages: doctor.languages,
+        bio: doctor.bio
+      }
+    })
 
     return NextResponse.json({
       success: true,
-      doctors: formattedDoctors,
-      total: formattedDoctors.length
+      doctors: doctorsWithRating,
+      total: doctorsWithRating.length
     })
 
   } catch (error) {

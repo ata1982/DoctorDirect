@@ -3,6 +3,28 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { log, LogLevel } from '@/lib/utils'
 
+// 型定義を追加
+type AppointmentWithRelations = {
+  id: string
+  type: string
+  status: string
+  scheduledAt: Date
+  duration: number | null
+  notes: string | null
+  symptoms: string[]
+  doctor?: {
+    user: {
+      name: string | null
+      image: string | null
+    }
+    specialties: string[]
+  } | null
+  assignedDoctor?: {
+    name: string | null
+    image: string | null
+  } | null
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession()
@@ -43,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      appointments: appointments.map(appointment => ({
+      appointments: appointments.map((appointment: AppointmentWithRelations) => ({
         id: appointment.id,
         type: appointment.type,
         status: appointment.status,
@@ -80,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { doctorId, hospitalId, type, scheduledAt, duration, reason } = body
+    const { doctorId, _hospitalId, type, scheduledAt, duration, reason } = body
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }

@@ -107,7 +107,7 @@ export async function analyzeSymptoms(symptoms: {
     
     throw new Error('Invalid AI response format');
   } catch (error) {
-    console.error('Symptom analysis error:', error);
+    log(LogLevel.ERROR, 'Symptom analysis failed', { error: error instanceof Error ? error.message : String(error) });
     return {
       primaryDiagnosis: '分析に失敗しました',
       confidence: 0,
@@ -166,7 +166,7 @@ export async function analyzeImage(
     
     throw new Error('Invalid AI response format');
   } catch (error) {
-    console.error('Image analysis error:', error);
+    log(LogLevel.ERROR, 'Image analysis failed', { error: error instanceof Error ? error.message : String(error) });
     return {
       condition: '画像分析に失敗しました',
       confidence: 0,
@@ -227,7 +227,7 @@ export async function getHealthCoachAdvice(
     
     throw new Error('Invalid AI response format');
   } catch (error) {
-    console.error('Health coach error:', error);
+    log(LogLevel.ERROR, 'Health coach advice generation failed', { error: error instanceof Error ? error.message : String(error) });
     return {
       category,
       advice: 'アドバイスの生成に失敗しました',
@@ -280,7 +280,7 @@ export async function checkDrugInteractions(medications: string[]): Promise<{
     
     return { hasInteractions: false, interactions: [] };
   } catch (error) {
-    console.error('Drug interaction check error:', error);
+    log(LogLevel.ERROR, 'Drug interaction check failed', { error: error instanceof Error ? error.message : String(error) });
     return { hasInteractions: false, interactions: [] };
   }
 }
@@ -319,7 +319,7 @@ export async function assessEmergency(symptoms: string[]): Promise<{
     
     throw new Error('Invalid response');
   } catch (error) {
-    console.error('Emergency assessment error:', error);
+    log(LogLevel.ERROR, 'Emergency assessment failed', { error: error instanceof Error ? error.message : String(error) });
     return {
       isEmergency: true,
       urgencyLevel: 'high',
@@ -341,7 +341,7 @@ export async function generateText(prompt: string, systemMessage?: string): Prom
     const response = await result.response;
     const text = response.text();
     
-    console.log('Generated text successfully with Gemini');
+    log(LogLevel.DEBUG, 'AI text generation successful', { provider: 'gemini' });
     
     return {
       success: true,
@@ -349,7 +349,7 @@ export async function generateText(prompt: string, systemMessage?: string): Prom
       provider: 'gemini'
     };
   } catch (geminiError) {
-    console.error('Gemini error:', geminiError);
+    log(LogLevel.WARN, 'Gemini text generation failed, falling back to OpenAI', { error: geminiError instanceof Error ? geminiError.message : String(geminiError) });
     
     // Fallback to OpenAI
     try {
@@ -368,7 +368,7 @@ export async function generateText(prompt: string, systemMessage?: string): Prom
         throw new Error('No content generated');
       }
 
-      console.log('Generated text successfully with OpenAI');
+      log(LogLevel.DEBUG, 'AI text generation successful', { provider: 'openai' });
       
       return {
         success: true,
@@ -377,7 +377,7 @@ export async function generateText(prompt: string, systemMessage?: string): Prom
         tokensUsed: completion.usage?.total_tokens
       };
     } catch (openaiError) {
-      console.error('OpenAI error:', openaiError);
+      log(LogLevel.ERROR, 'OpenAI text generation failed', { error: openaiError instanceof Error ? openaiError.message : String(openaiError) });
       
       return {
         success: false,

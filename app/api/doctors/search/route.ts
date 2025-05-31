@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { log, LogLevel } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Doctor search error:', error)
+    log(LogLevel.ERROR, 'Failed to search doctors', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

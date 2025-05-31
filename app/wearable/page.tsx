@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { 
   Watch, 
   Heart, 
@@ -19,8 +18,8 @@ import {
   RefreshCw,
   AlertTriangle
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -143,22 +142,18 @@ export default function WearablePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               ウェアラブル連携
             </h1>
             <p className="text-gray-600">
               スマートウォッチやフィットネストラッカーと連携して健康データを管理
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* デバイス管理 */}
@@ -181,9 +176,8 @@ export default function WearablePage() {
                     const Icon = getDeviceIcon(device.type)
                     const status = getConnectionStatus(device.connected)
                     return (
-                      <motion.div
+                      <div
                         key={device.id}
-                        whileHover={{ scale: 1.02 }}
                         className="border rounded-lg p-4"
                       >
                         <div className="flex items-start justify-between mb-3">
@@ -227,7 +221,7 @@ export default function WearablePage() {
                             <Settings className="w-4 h-4" />
                           </Button>
                         </div>
-                      </motion.div>
+                      </div>
                     )
                   })}
 
@@ -453,7 +447,7 @@ export default function WearablePage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

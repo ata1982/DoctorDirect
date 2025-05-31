@@ -1,3 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* カスタムプロパティ */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+  --shadow-heavy: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --bg-primary: #ffffff;
+  --accent-blue: #4f46e5;
+  --accent-purple: #7c3aed;
+  --accent-pink: #ec4899;
+}
+
+[data-theme="dark"] {
+  --glass-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --bg-primary: linear-gradient(135deg, #0a0a0b 0%, #1a1a1a 50%, #0a0a0b 100%);
+}
+
+[data-theme="dark"] body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* グローバルリセット */
 * {
   margin: 0;
@@ -10,29 +46,50 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   line-height: 1.6;
-  background-color: #ffffff;
-  color: #1a1a1a;
-  letter-spacing: -0.022em;
-  font-feature-settings: 'kern' 1;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow-x: hidden;
 }
 
-/* ダークモード */
-.dark body {
-  background-color: #1a1a1a;
-  color: #f5f5f7;
+/* カスタムスクロールバー */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-blue), var(--accent-purple));
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-purple), var(--accent-pink));
 }
 
 /* コンテナ */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
 }
 
 /* ユーティリティクラス */
@@ -96,21 +153,158 @@ body {
   }
 }
 
+/* グラスモーフィズム効果 */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-light);
+}
+
+/* ニューモーフィズム効果 */
+.neumorphism {
+  background: linear-gradient(145deg, #f0f0f0, #cacaca);
+  box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+}
+
+[data-theme="dark"] .neumorphism {
+  background: linear-gradient(145deg, #1e1e1e, #0a0a0a);
+  box-shadow: 20px 20px 60px #000000, -20px -20px 60px #2c2c2c;
+}
+
+/* 3D変形アニメーション */
+.transform-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.hover-lift {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+}
+
+/* グラデーションテキスト */
+.gradient-text {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-alt {
+  background: var(--secondary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 浮遊アニメーション */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(1deg); }
+  66% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(10px) rotate(-1deg); }
+  66% { transform: translateY(5px) rotate(1deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 8s ease-in-out infinite;
+}
+
+/* 回転グラデーション */
+@keyframes rotateGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: rotateGradient 3s ease infinite;
+}
+
+/* パルス効果 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* レスポンシブヘルパー */
 @media (min-width: 768px) {
-  .md-flex {
-    display: flex;
+  .md-flex { display: flex; }
+  .md-hidden { display: none; }
+  .md-block { display: block; }
+  .md-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .lg-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .lg-text-6xl { font-size: 3.75rem; line-height: 1; }
+}
+
+/* パフォーマンス最適化 */
+.will-change-transform { will-change: transform; }
+.will-change-opacity { will-change: opacity; }
+.gpu-accelerated { transform: translateZ(0); }
+
+/* 高DPI対応 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .glass {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+  }
+}
+
+/* プリント用スタイル */
+@media print {
+  .glass, .neumorphism, .animate-float, .animate-float-reverse {
+    background: white !important;
+    box-shadow: none !important;
+    animation: none !important;
+    backdrop-filter: none !important;
   }
   
-  .md-hidden {
-    display: none;
+  .gradient-text, .gradient-text-alt {
+    color: black !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
   }
-  
-  .md-block {
-    display: block;
-  }
-  
-  .md-grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr);
+}
+
+/* フォーカス管理 */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* 選択時のスタイル */
+::selection {
+  background: rgba(79, 70, 229, 0.2);
+  color: var(--text-primary);
+}
+
+/* アクセシビリティ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

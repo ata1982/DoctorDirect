@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { 
   Video, 
   VideoOff, 
@@ -15,8 +14,8 @@ import {
   Camera,
   Share
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -225,22 +224,18 @@ export default function ConsultationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               オンライン相談
             </h1>
             <p className="text-gray-600">
               医師とリアルタイムで相談できます
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* メイン相談エリア */}
@@ -427,7 +422,7 @@ export default function ConsultationPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

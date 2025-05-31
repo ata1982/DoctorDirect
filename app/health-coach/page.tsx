@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { 
   Heart, 
   Activity, 
@@ -16,8 +15,8 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -123,22 +122,18 @@ export default function HealthCoachPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               AI健康コーチ
             </h1>
             <p className="text-gray-600">
               あなた専用の健康アドバイザーが最適な健康管理をサポートします
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* カテゴリ選択 */}
@@ -147,11 +142,7 @@ export default function HealthCoachPage() {
               {categories.map((category) => {
                 const Icon = category.icon
                 return (
-                  <motion.div
-                    key={category.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
+                  <div key={category.id}>
                     <Card
                       className={`cursor-pointer transition-all ${
                         selectedCategory === category.id
@@ -172,7 +163,7 @@ export default function HealthCoachPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 )
               })}
             </div>
@@ -339,7 +330,7 @@ export default function HealthCoachPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

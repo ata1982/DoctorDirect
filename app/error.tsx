@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { log, LogLevel } from '@/lib/utils'
 
 interface ErrorBoundaryProps {
   error: Error & { digest?: string }
@@ -11,6 +12,11 @@ export default function Error({ error, reset }: ErrorBoundaryProps) {
   useEffect(() => {
     // エラーログをサービスに送信
     console.error('Application error:', error)
+    log(LogLevel.ERROR, 'Application error boundary triggered', { 
+      message: error.message, 
+      stack: error.stack,
+      digest: error.digest 
+    })
   }, [error])
 
   return (

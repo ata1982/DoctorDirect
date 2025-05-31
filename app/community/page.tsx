@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 
 interface CommunityPost {
   id: string
@@ -133,7 +133,7 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container">
@@ -351,7 +351,7 @@ export default function CommunityPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

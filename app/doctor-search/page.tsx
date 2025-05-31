@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { 
   Search, 
   MapPin, 
@@ -16,8 +15,8 @@ import {
   Award,
   Users
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -149,22 +148,18 @@ export default function DoctorSearchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-7xl">
           {/* ヘッダー */}
           <div className="mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center"
-            >
+            <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">医師検索</h1>
               <p className="text-lg text-gray-600">
                 あなたに最適な医師を見つけて、安心の医療相談を始めましょう
               </p>
-            </motion.div>
+            </div>
           </div>
 
           {/* 検索フィルター */}
@@ -230,11 +225,7 @@ export default function DoctorSearchPage() {
 
             {/* 詳細フィルター */}
             {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mt-4 p-4 bg-gray-50 rounded-lg"
-              >
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -296,7 +287,7 @@ export default function DoctorSearchPage() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
 
@@ -309,12 +300,7 @@ export default function DoctorSearchPage() {
               </div>
             ) : (
               doctors.map((doctor, index) => (
-                <motion.div
-                  key={doctor.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
+                <div key={doctor.id}>
                   <Card className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -435,14 +421,14 @@ export default function DoctorSearchPage() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

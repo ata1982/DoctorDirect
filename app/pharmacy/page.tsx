@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { 
   Pill, 
   Clock, 
@@ -16,8 +15,8 @@ import {
   QrCode,
   Download
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -108,22 +107,18 @@ export default function PharmacyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               処方箋・薬局管理
             </h1>
             <p className="text-gray-600">
               処方箋の管理と近くの薬局を探すことができます
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* 処方箋一覧 */}
@@ -154,9 +149,8 @@ export default function PharmacyPage() {
                   ) : (
                     <div className="space-y-4">
                       {prescriptions.map((prescription) => (
-                        <motion.div
+                        <div
                           key={prescription.id}
-                          whileHover={{ scale: 1.02 }}
                           className="border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer"
                           onClick={() => setSelectedPrescription(prescription)}
                         >
@@ -209,7 +203,7 @@ export default function PharmacyPage() {
                               薬局に送信
                             </Button>
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -272,9 +266,8 @@ export default function PharmacyPage() {
                     />
                     
                     {nearbyPharmacies.map((pharmacy) => (
-                      <motion.div
+                      <div
                         key={pharmacy.id}
-                        whileHover={{ scale: 1.02 }}
                         className="border rounded-lg p-4 hover:shadow-md transition-all"
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -304,7 +297,7 @@ export default function PharmacyPage() {
                             詳細を見る
                           </Button>
                         </div>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 </CardContent>
@@ -346,7 +339,7 @@ export default function PharmacyPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

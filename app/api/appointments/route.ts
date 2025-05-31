@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { log, LogLevel } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Appointments fetch error:', error)
+    log(LogLevel.ERROR, 'Failed to fetch appointments', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Appointment creation error:', error)
+    log(LogLevel.ERROR, 'Failed to create appointment', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

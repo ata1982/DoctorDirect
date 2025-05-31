@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { 
   AlertTriangle, 
   Phone, 
@@ -14,8 +13,8 @@ import {
   PhoneCall,
   Stethoscope
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -179,16 +178,12 @@ export default function EmergencyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-6xl">
           {/* 緊急時ヘッダー */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
-          >
+          <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <AlertTriangle className="w-12 h-12 text-red-600 mr-3" />
               <h1 className="text-4xl font-bold text-gray-900">緊急時対応</h1>
@@ -196,15 +191,10 @@ export default function EmergencyPage() {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               緊急事態に迅速に対応するための情報とサポートを提供します
             </p>
-          </motion.div>
+          </div>
 
           {/* 緊急連絡先 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <Card className="border-red-200 bg-red-50">
               <CardHeader>
                 <CardTitle className="text-red-800 flex items-center">
@@ -238,7 +228,7 @@ export default function EmergencyPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 緊急事態の種類 */}
@@ -277,11 +267,7 @@ export default function EmergencyPage() {
                               </h4>
                               
                               {isSelected && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  className="space-y-3"
-                                >
+                                <div className="space-y-3">
                                   <div>
                                     <h5 className="font-medium text-gray-700 mb-1">
                                       主な症状:
@@ -320,7 +306,7 @@ export default function EmergencyPage() {
                                     <Phone className="w-4 h-4 mr-2" />
                                     119番通報
                                   </Button>
-                                </motion.div>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -438,7 +424,7 @@ export default function EmergencyPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

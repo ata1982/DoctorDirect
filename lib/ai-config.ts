@@ -1,3 +1,5 @@
+import { log, LogLevel } from './utils';
+
 export interface AIProviderConfig {
   name: string;
   endpoint?: string;
@@ -46,12 +48,12 @@ export const aiConfig: AISystemConfig = {
 export const getProviderConfig = (providerName: string): AIProviderConfig | null => {
   const config = aiConfig.providers[providerName];
   if (!config) {
-    console.warn(`AI provider '${providerName}' not found`);
+    log(LogLevel.WARN, 'AI provider not found', { providerName });
     return null;
   }
   
   if (!config.apiKey) {
-    console.warn(`API key not configured for provider '${providerName}'`);
+    log(LogLevel.WARN, 'API key not configured for AI provider', { providerName });
     return null;
   }
   
@@ -61,7 +63,7 @@ export const getProviderConfig = (providerName: string): AIProviderConfig | null
 export const getDefaultProvider = (): AIProviderConfig | null => {
   const config = getProviderConfig(aiConfig.defaultProvider);
   if (!config) {
-    console.warn(`Default provider '${aiConfig.defaultProvider}' is not available`);
+    log(LogLevel.WARN, 'Default AI provider is not available', { defaultProvider: aiConfig.defaultProvider });
     return getFallbackProvider();
   }
   return config;
@@ -70,7 +72,7 @@ export const getDefaultProvider = (): AIProviderConfig | null => {
 export const getFallbackProvider = (): AIProviderConfig | null => {
   const config = getProviderConfig(aiConfig.fallbackProvider);
   if (!config) {
-    console.error('Both default and fallback providers are unavailable');
+    log(LogLevel.ERROR, 'Both default and fallback AI providers are unavailable', {});
     return null;
   }
   return config;
@@ -78,12 +80,12 @@ export const getFallbackProvider = (): AIProviderConfig | null => {
 
 export const validateProviderConfig = (config: AIProviderConfig): boolean => {
   if (!config.apiKey) {
-    console.error(`Missing API key for provider: ${config.name}`);
+    log(LogLevel.ERROR, 'Missing API key for AI provider', { providerName: config.name });
     return false;
   }
   
   if (!config.model) {
-    console.error(`Missing model for provider: ${config.name}`);
+    log(LogLevel.ERROR, 'Missing model for AI provider', { providerName: config.name });
     return false;
   }
   

@@ -4,6 +4,7 @@ import { Server as ServerIO } from 'socket.io'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../lib/auth-options'
 import { prisma } from '../../lib/prisma'
+import { log, LogLevel } from '../../lib/utils'
 
 export const config = {
   api: {
@@ -13,9 +14,9 @@ export const config = {
 
 const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
   if ((res.socket as any)?.server?.io) {
-    console.log('Socket is already running')
+    log(LogLevel.INFO, 'Socket server already running', {})
   } else {
-    console.log('Socket is initializing')
+    log(LogLevel.INFO, 'Socket server initializing', {})
     const httpServer: NetServer = (res.socket as any)?.server
     const io = new ServerIO(httpServer, {
       path: '/api/socket',
@@ -41,7 +42,7 @@ const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     })
 
     io.on('connection', (socket) => {
-      console.log(`User connected: ${(socket as any).userId}`)
+      log(LogLevel.INFO, 'User connected to socket', { userId: (socket as any).userId })
 
       // Join user-specific room
       socket.join(`user:${(socket as any).userId}`)
@@ -49,13 +50,13 @@ const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
       // Handle consultation room joining
       socket.on('join-consultation', (consultationId: string) => {
         socket.join(`consultation:${consultationId}`)
-        console.log(`User ${(socket as any).userId} joined consultation ${consultationId}`)
+        log(LogLevel.INFO, 'User joined consultation room', { userId: (socket as any).userId, consultationId })
       })
 
       // Handle leaving consultation room
       socket.on('leave-consultation', (consultationId: string) => {
         socket.leave(`consultation:${consultationId}`)
-        console.log(`User ${(socket as any).userId} left consultation ${consultationId}`)
+        log(LogLevel.INFO, 'User left consultation room', { userId: (socket as any).userId, consultationId })
       })
 
       // Handle chat messages
@@ -110,7 +111,7 @@ const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
             data: { consultationId: data.consultationId },
           })
         } catch (error) {
-          console.error('Error sending message:', error)
+          log(LogLevel.ERROR, 'Failed to send message', { error: error instanceof Error ? error.message : String(error) })
           socket.emit('error', { message: 'Failed to send message' })
         }
       })
@@ -164,7 +165,7 @@ const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
 
           socket.emit('emergency-alert-sent', { success: true })
         } catch (error) {
-          console.error('Error handling emergency alert:', error)
+          log(LogLevel.ERROR, 'Failed to handle emergency alert', { error: error instanceof Error ? error.message : String(error) })
           socket.emit('error', { message: 'Failed to send emergency alert' })
         }
       })
@@ -222,7 +223,7 @@ const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
 
           socket.emit('wearable-data-received', { count: data.readings.length })
         } catch (error) {
-          console.error('Error processing wearable data:', error)
+          log(LogLevel.ERROR, 'Failed to process wearable data', { error: error instanceof Error ? error.message : String(error) })
           socket.emit('error', { message: 'Failed to process wearable data' })
         }
       })
@@ -265,7 +266,7 @@ const SocketHandler = async (req: NextApiRequest, res: NextApiResponse) => {
       })
 
       socket.on('disconnect', () => {
-        console.log(`User disconnected: ${(socket as any).userId}`)
+        log(LogLevel.INFO, 'User disconnected from socket', { userId: (socket as any).userId })
       })
     })
 

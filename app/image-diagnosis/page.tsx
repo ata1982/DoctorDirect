@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { 
   Upload, 
   Camera, 
@@ -15,8 +14,8 @@ import {
   Brain,
   Stethoscope
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -193,16 +192,13 @@ export default function ImageDiagnosisPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-6xl">
           {/* ヘッダー */}
           <div className="mb-8 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+            <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
                 AI画像診断
               </h1>
@@ -210,15 +206,11 @@ export default function ImageDiagnosisPage() {
                 最新のAI技術を使用して、症状の写真から初期診断を行います。
                 ※これは参考情報であり、正式な診断ではありません。
               </p>
-            </motion.div>
+            </div>
           </div>
 
           {/* 注意事項 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <div>
             <Card className="mb-8 border-yellow-200 bg-yellow-50">
               <CardContent className="p-6">
                 <div className="flex items-start space-x-3">
@@ -234,7 +226,7 @@ export default function ImageDiagnosisPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 画像アップロード */}
@@ -395,11 +387,7 @@ export default function ImageDiagnosisPage() {
             {/* 診断結果 */}
             <div className="space-y-6">
               {diagnosis ? (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-6"
-                >
+                <div className="space-y-6">
                   {/* 診断結果サマリー */}
                   <Card>
                     <CardHeader>
@@ -476,7 +464,7 @@ export default function ImageDiagnosisPage() {
                       結果を共有
                     </Button>
                   </div>
-                </motion.div>
+                </div>
               ) : (
                 <Card>
                   <CardContent className="p-12 text-center">
@@ -495,7 +483,7 @@ export default function ImageDiagnosisPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }

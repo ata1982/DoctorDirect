@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { log, LogLevel } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Prescriptions fetch error:', error)
+    log(LogLevel.ERROR, 'Failed to fetch prescriptions', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Prescription creation error:', error)
+    log(LogLevel.ERROR, 'Failed to create prescription', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

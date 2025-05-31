@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { log, LogLevel } from '@/lib/utils'
 
 interface PerformanceMetrics {
   fcp?: number // First Contentful Paint
@@ -20,7 +21,7 @@ export default function PerformanceMonitor() {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries()
           const lastEntry = entries[entries.length - 1] as any
-          console.log('LCP:', lastEntry.startTime)
+          log(LogLevel.INFO, 'LCP measurement', { value: lastEntry.startTime })
           
           // Analytics にメトリクスを送信
           if (window.gtag) {
@@ -36,13 +37,14 @@ export default function PerformanceMonitor() {
         try {
           lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
         } catch (e) {
-          console.warn('LCP observer not supported')
+          log(LogLevel.WARN, 'LCP observer not supported', {})
         }
 
         // FID (First Input Delay) の監視
         const fidObserver = new PerformanceObserver((list) => {
           list.getEntries().forEach((entry: any) => {
-            console.log('FID:', entry.processingStart - entry.startTime)
+            const fidValue = entry.processingStart - entry.startTime;
+            log(LogLevel.INFO, 'FID measurement', { value: fidValue })
             
             if (window.gtag) {
               window.gtag('event', 'web_vitals', {
@@ -57,7 +59,7 @@ export default function PerformanceMonitor() {
         try {
           fidObserver.observe({ entryTypes: ['first-input'] })
         } catch (e) {
-          console.warn('FID observer not supported')
+          log(LogLevel.WARN, 'FID observer not supported', {})
         }
 
         // CLS (Cumulative Layout Shift) の監視
@@ -75,7 +77,7 @@ export default function PerformanceMonitor() {
           
           // ページ離脱時にCLS値を送信
           window.addEventListener('beforeunload', () => {
-            console.log('CLS:', clsValue)
+            log(LogLevel.INFO, 'CLS measurement', { value: clsValue })
             if (window.gtag) {
               window.gtag('event', 'web_vitals', {
                 event_category: 'Performance',
@@ -85,7 +87,7 @@ export default function PerformanceMonitor() {
             }
           })
         } catch (e) {
-          console.warn('CLS observer not supported')
+          log(LogLevel.WARN, 'CLS observer not supported', {})
         }
       }
 
@@ -94,7 +96,7 @@ export default function PerformanceMonitor() {
         setTimeout(() => {
           const perfData = window.performance.timing
           const loadTime = perfData.loadEventEnd - perfData.navigationStart
-          console.log('Page Load Time:', loadTime)
+          log(LogLevel.INFO, 'Page load time measurement', { value: loadTime })
           
           if (window.gtag) {
             window.gtag('event', 'page_load_time', {
@@ -108,7 +110,7 @@ export default function PerformanceMonitor() {
 
     // エラー監視
     const handleError = (error: ErrorEvent) => {
-      console.error('JavaScript Error:', error)
+      log(LogLevel.ERROR, 'JavaScript error caught by performance monitor', { message: error.message, filename: error.filename, lineno: error.lineno })
       
       if (window.gtag) {
         window.gtag('event', 'exception', {
@@ -119,7 +121,7 @@ export default function PerformanceMonitor() {
     }
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled Promise Rejection:', event.reason)
+      log(LogLevel.ERROR, 'Unhandled promise rejection caught by performance monitor', { reason: String(event.reason) })
       
       if (window.gtag) {
         window.gtag('event', 'exception', {

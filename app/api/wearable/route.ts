@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { log, LogLevel } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Wearable data fetch error:', error)
+    log(LogLevel.ERROR, 'Failed to fetch wearable data', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Wearable data creation error:', error)
+    log(LogLevel.ERROR, 'Failed to create wearable data', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

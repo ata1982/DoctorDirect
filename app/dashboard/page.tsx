@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { 
   Calendar, 
   Heart, 
@@ -17,12 +16,13 @@ import {
   Shield,
   Pill
 } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import ModernHeader from '@/components/ModernHeader'
+import ModernFooter from '@/components/ModernFooter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/lib/store'
+import { log, LogLevel } from '@/lib/utils'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -55,7 +55,7 @@ export default function DashboardPage() {
       const prescriptionsData = await prescriptionsResponse.json()
       setPrescriptions(prescriptionsData.prescriptions || [])
     } catch (error) {
-      console.error('Dashboard data fetch error:', error)
+      log(LogLevel.ERROR, 'Failed to fetch dashboard data', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -144,17 +144,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ModernHeader />
       
       <main className="pt-20 pb-16">
         <div className="container max-w-7xl">
           {/* ヘッダー */}
           <div className="mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between"
-            >
+            <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
                   こんにちは、{session?.user?.name}さん
@@ -173,7 +169,7 @@ export default function DashboardPage() {
                   緊急相談
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* タブナビゲーション */}
@@ -209,12 +205,7 @@ export default function DashboardPage() {
                 {stats.map((stat, index) => {
                   const Icon = stat.icon
                   return (
-                    <motion.div
-                      key={stat.title}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
+                    <div key={stat.title}>
                       <Card>
                         <CardContent className="p-6">
                           <div className="flex items-center">
@@ -232,7 +223,7 @@ export default function DashboardPage() {
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   )
                 })}
               </div>
@@ -519,7 +510,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      <Footer />
+      <ModernFooter />
     </div>
   )
 }
